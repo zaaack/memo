@@ -1,0 +1,115 @@
+// .root {
+//   letter-spacing: 1px;
+//   background-color: var(--adm-color-background);
+//   padding-top: 42px;
+//   padding-bottom: 22px;
+//   .navbar {
+//     display: flex;
+//     align-items: center;
+//     position: fixed;
+//     top: 0;
+//     width: 100%;
+//     height: 42px;
+//     background-color: var(--adm-color-background);
+//     z-index: 1000;
+//     .cat {
+//       flex: 1;
+//     }
+//   }
+//   .title {
+//     width: 100%;
+//     padding: 12px 15px;
+//     box-sizing: border-box;
+//     overflow: hidden;
+//     resize: none;
+//     appearance: none;
+//     outline: none;
+//     border: none;
+//     font-size: 18px;
+//     line-height: normal;
+//     font-weight: bold;
+//     letter-spacing: 1px;
+//     font-family: var(--adm-font-family);
+//   }
+//   .info {
+//     padding: 0 15px;
+//     font-size: 12px;
+//     margin: -8px 0 0px;
+//   }
+//   .content {
+//     min-height: calc(100vh - 84px - 48px - 17px);
+//     border: none;
+//   }
+//   trix-toolbar {
+//     position: fixed;
+//     bottom: 0;
+//     width: 100%;
+//     z-index: 1000;
+//     overflow-x: visible;
+//     overflow-y: auto;
+//     white-space: nowrap;
+//     background-color: var(--adm-color-background);
+//   }
+// }
+
+
+// :global {
+//   trix-toolbar .trix-button--icon-attach::before {
+//     background-image: url('./ic_image.svg');
+//   }
+
+//   trix-toolbar .trix-button-group {
+//     margin-bottom: 0;
+//   }
+//   // .ql-toolbar {
+//   //   position: fixed;
+//   //   bottom: 0;
+//   //   width: 100%;
+//   //   z-index: 1000;
+//   //   overflow-x: visible;
+//   //   overflow-y: auto;
+//   //   white-space: nowrap;
+//   //   background-color: var(--adm-color-background);
+//   // }
+//   // .ql-container{
+//   //   font-size: inherit;
+//   //   background-color: white;
+//   //   font-size: 15px;
+//   //   line-height: normal;
+//   //   .ql-editor {
+//   //     min-height: calc(100vh - 42 * 2px - 48px - 48px);
+//   //   }
+//   // }
+//   // .ql-container.ql-snow {
+//   //   border: none;
+//   // }
+//   // .ql-snow .ql-picker.ql-expanded .ql-picker-options {
+//   //   top: auto;
+//   //   bottom: -8px;
+//   //   display: flex;
+//   //   padding-right: 0;
+//   //   padding-left: 0;
+//   //   z-index: 5;
+//   //   .ql-picker-item {
+//   //     padding-left: 8px;
+//   //     padding-right: 8px;
+//   //     border-right: 1px solid #aaa;
+//   //   }
+//   // }
+//   // .ql-snow .ql-picker.ql-header {
+//   //   width:50px;
+
+//   //   .ql-picker-label::before, .ql-picker-item::before {
+//   //     content:'P';
+//   //     font-size: 1em;
+//   //   }
+//   //   .ql-picker-label[data-value="1"]::before,  .ql-picker-item[data-value="1"]::before {
+//   //     content:'H1';
+//   //     font-size: 1em;
+//   //   }
+//   //   .ql-picker-label[data-value="2"]::before,  .ql-picker-item[data-value="2"]::before {
+//   //     content: 'H2';
+//   //     font-size: 1em;
+//   //   }
+//   // }
+// }

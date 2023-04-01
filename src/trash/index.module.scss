@@ -1,0 +1,10 @@
+@import '../lib/common.scss';
+
+.title {
+  @include line-clamp(2);
+}
+
+.info {
+  font-size: 13px;
+  color: #aaa;
+}

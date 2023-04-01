@@ -1,0 +1,43 @@
+@import '../lib/common.scss';
+:root {
+  --adm-font-family: 'sans-serif';
+  --main-background: #ececec;
+  --global-padding: 8px;
+  --adm-color-primary: #f90;
+}
+body {
+  padding: 0;
+  margin: 0;
+  background-color: var(--main-background);
+  user-zoom: fixed;
+}
+:global {
+  .adm-nav-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--adm-color-background);
+    padding: 0;
+    z-index: 100;
+    .adm-nav-bar-back {
+      margin-right: 0;
+    }
+  }
+}
+.root {
+  width: 100%;
+  overflow: hidden;
+  padding: var(--global-padding);
+  box-sizing: border-box;
+  padding-top: calc(75px + var(--global-padding));
+  &.search {
+    padding-top: calc(40px + var(--global-padding));
+  }
+
+  .notes {
+    overflow: hidden;
+    column-count: 2;
+    column-gap: 10px;
+  }
+}

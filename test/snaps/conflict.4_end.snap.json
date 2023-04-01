@@ -1,0 +1,273 @@
+{
+  "db": [
+    {
+      "table": "notes",
+      "rows": [
+        {
+          "title": "test1",
+          "content": "test1c<custom-image id=\"4\" />|$<custom-image id=\"3lllllllllm\" />",
+          "createdAt": "2023-04-08T16:00:00.001Z",
+          "updatedAt": "2023-04-08T16:00:00.001Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:00:00.003Z",
+          "categoryId": 0,
+          "images": [
+            "4",
+            "3lllllllllm"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 1
+        },
+        {
+          "title": "updated2",
+          "content": "updated2<custom-image id=\"2\" />",
+          "createdAt": "2023-04-08T16:00:00.002Z",
+          "updatedAt": "2023-04-08T16:02:00.003Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:02:00.004Z",
+          "categoryId": 0,
+          "images": [
+            "2"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 100
+        },
+        {
+          "title": "test101",
+          "content": "test101c<custom-image id=\"2eeeeeeeeee\" />|$<custom-image id=\"29\" />",
+          "createdAt": "2023-04-08T16:01:00.003Z",
+          "updatedAt": "2023-04-08T16:01:00.003Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:01:00.005Z",
+          "categoryId": 0,
+          "images": [
+            "2eeeeeeeeee",
+            "29"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 101
+        },
+        {
+          "title": "[冲突_2023/04/09 00:01:00]test101",
+          "content": "test101c<custom-image id=\"2rox8b2rox8\" />|$<custom-image id=\"2kkkkkkkkkk\" />",
+          "createdAt": "2023-04-08T16:01:00.005Z",
+          "updatedAt": "2023-04-08T16:01:00.005Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:01:00.005Z",
+          "categoryId": 0,
+          "images": [
+            "2rox8b2rox8",
+            "2kkkkkkkkkk"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 102
+        },
+        {
+          "title": "[冲突_2023/04/09 00:02:00]updated",
+          "content": "updated<custom-image id=\"248gxvrj249\" />",
+          "createdAt": "2023-04-08T16:02:00.004Z",
+          "updatedAt": "2023-04-08T16:02:00.004Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:02:00.004Z",
+          "categoryId": 0,
+          "images": [
+            "248gxvrj249"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 103
+        }
+      ]
+    },
+    {
+      "table": "categories",
+      "rows": []
+    },
+    {
+      "table": "images",
+      "rows": [
+        {
+          "id": "2",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "29",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "2eeeeeeeeee",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "3lllllllllm",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "4",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        }
+      ]
+    },
+    {
+      "table": "kvs",
+      "rows": []
+    }
+  ],
+  "syncInfo": {
+    "notes": {
+      "1": {
+        "updatedAt": "2023-04-08T16:02:00.003Z",
+        "syncedAt": "2023-04-08T16:02:00.004Z"
+      },
+      "101": {
+        "updatedAt": "2023-04-08T16:02:00.004Z",
+        "syncedAt": "2023-04-08T16:02:00.004Z"
+      }
+    },
+    "categories": {
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    }
+  },
+  "remoteFiles": {
+    "memo/memo.lock": {
+      "timeout": 0
+    },
+    "memo/noteImages_1.json": {
+      "data": [
+        {
+          "id": "4",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "3lllllllllm",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        }
+      ]
+    },
+    "memo/noteImages_100.json": {
+      "data": [
+        {
+          "id": "2",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        }
+      ]
+    },
+    "memo/noteImages_101.json": {
+      "data": [
+        {
+          "id": "2eeeeeeeeee",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "29",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        }
+      ]
+    },
+    "memo/note_1-100.json": {
+      "data": [
+        {
+          "title": "test1",
+          "content": "test1c<custom-image id=\"4\" />|$<custom-image id=\"3lllllllllm\" />",
+          "createdAt": "2023-04-08T16:00:00.001Z",
+          "updatedAt": "2023-04-08T16:00:00.001Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:00:00.003Z",
+          "categoryId": 0,
+          "images": [
+            "4",
+            "3lllllllllm"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 1
+        },
+        {
+          "title": "updated2",
+          "content": "updated2<custom-image id=\"2\" />",
+          "createdAt": "2023-04-08T16:00:00.002Z",
+          "updatedAt": "2023-04-08T16:02:00.003Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:02:00.004Z",
+          "categoryId": 0,
+          "images": [
+            "2"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 100
+        }
+      ]
+    },
+    "memo/note_101-200.json": {
+      "data": [
+        {
+          "title": "test101",
+          "content": "test101c<custom-image id=\"2eeeeeeeeee\" />|$<custom-image id=\"29\" />",
+          "createdAt": "2023-04-08T16:01:00.003Z",
+          "updatedAt": "2023-04-08T16:01:00.003Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:01:00.005Z",
+          "categoryId": 0,
+          "images": [
+            "2eeeeeeeeee",
+            "29"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 101
+        },
+        {
+          "title": "[冲突_2023/04/09 00:01:00]test101",
+          "content": "test101c<custom-image id=\"2rox8b2rox8\" />|$<custom-image id=\"2kkkkkkkkkk\" />",
+          "createdAt": "2023-04-08T16:01:00.005Z",
+          "updatedAt": "2023-04-08T16:01:00.005Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:01:00.005Z",
+          "categoryId": 0,
+          "images": [
+            "2rox8b2rox8",
+            "2kkkkkkkkkk"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 102
+        },
+        {
+          "title": "[冲突_2023/04/09 00:02:00]updated",
+          "content": "updated<custom-image id=\"248gxvrj249\" />",
+          "createdAt": "2023-04-08T16:02:00.004Z",
+          "updatedAt": "2023-04-08T16:02:00.004Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:02:00.004Z",
+          "categoryId": 0,
+          "images": [
+            "248gxvrj249"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 103
+        }
+      ]
+    },
+    "memo/syncInfo.json": {
+      "notes": {
+        "1": {
+          "updatedAt": "2023-04-08T16:02:00.003Z",
+          "syncedAt": "2023-04-08T16:02:00.004Z"
+        },
+        "101": {
+          "updatedAt": "2023-04-08T16:02:00.004Z",
+          "syncedAt": "2023-04-08T16:02:00.004Z"
+        }
+      },
+      "categories": {
+        "updatedAt": "1970-01-01T00:00:00.000Z"
+      }
+    }
+  }
+}

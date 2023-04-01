@@ -1,0 +1,26 @@
+
+.root {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--adm-color-background);
+  .item {
+    display: inline-block;
+    text-align: center;
+    padding: 8px 10px;
+    &.checked {
+      color: var(--adm-color-primary);
+    }
+    .text {
+      margin-top: 5px;
+    }
+  }
+}
+
+.holder {
+  height: 52px;
+}

@@ -1,0 +1,42 @@
+@import '../../lib/common.scss';
+
+
+.note {
+  display: block;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  color: var(--adm-color-text);
+  position: relative;
+  text-decoration: none;
+  overflow: hidden;
+  h2 {
+    margin: 0;
+  }
+  .content {
+    white-space: normal;
+    @include line-clamp(4);
+  }
+  .info {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+    .time {
+      color: #ccc;
+      font-size: 13px;
+    }
+    .isTop {
+      margin-left: 5px;
+      color: var(--adm-color-primary);
+    }
+    .holder {
+      flex: 1;
+    }
+  }
+  .img {
+    width: 100%;
+    height: 50px;
+    padding: none;
+    object-fit: cover;
+    display: block;
+  }
+}

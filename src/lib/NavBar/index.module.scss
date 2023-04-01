@@ -1,0 +1,14 @@
+.navbar {
+  // display: flex;
+  // align-items: center;
+  // height: 42px;
+  z-index: 1000;
+  &.bg {
+    background-color: var(--adm-color-background);
+  }
+  &.fixed {
+    position: fixed;
+    top: 0;
+    width: 100%;
+  }
+}

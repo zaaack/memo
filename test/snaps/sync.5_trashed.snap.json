@@ -1,0 +1,195 @@
+{
+  "db": [
+    {
+      "table": "notes",
+      "rows": [
+        {
+          "title": "test1",
+          "content": "test1c<custom-image id=\"c\" />|$<custom-image id=\"9\" />",
+          "createdAt": "2023-04-08T16:00:00.001Z",
+          "updatedAt": "2023-04-08T16:00:00.001Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:00:00.002Z",
+          "categoryId": 0,
+          "images": [
+            "c",
+            "9"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 1
+        },
+        {
+          "title": "test100_changed",
+          "content": "test100_changed_content",
+          "createdAt": "2023-04-08T16:01:00.001Z",
+          "updatedAt": "2023-04-08T16:03:00.001Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:03:00.002Z",
+          "categoryId": 0,
+          "images": [],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 100
+        },
+        {
+          "title": "test101",
+          "content": "test101c<custom-image id=\"55555555553\" />|$<custom-image id=\"4i\" />",
+          "createdAt": "2023-04-08T16:02:00.001Z",
+          "updatedAt": "2023-04-08T16:04:00.000Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "2023-04-08T16:04:00.000Z",
+          "syncedAt": "2023-04-08T16:04:00.001Z",
+          "categoryId": 0,
+          "images": [
+            "55555555553",
+            "4i"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 101
+        }
+      ]
+    },
+    {
+      "table": "categories",
+      "rows": []
+    },
+    {
+      "table": "images",
+      "rows": [
+        {
+          "id": "4i",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "55555555553",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "9",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "c",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        }
+      ]
+    },
+    {
+      "table": "kvs",
+      "rows": []
+    }
+  ],
+  "syncInfo": {
+    "notes": {
+      "1": {
+        "updatedAt": "2023-04-08T16:03:00.001Z",
+        "syncedAt": "2023-04-08T16:03:00.002Z"
+      },
+      "101": {
+        "updatedAt": "2023-04-08T16:04:00.000Z",
+        "syncedAt": "2023-04-08T16:04:00.001Z"
+      }
+    },
+    "categories": {
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    }
+  },
+  "remoteFiles": {
+    "memo/memo.lock": {
+      "timeout": 0
+    },
+    "memo/noteImages_1.json": {
+      "data": [
+        {
+          "id": "c",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "9",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        }
+      ]
+    },
+    "memo/noteImages_101.json": {
+      "data": [
+        {
+          "id": "55555555553",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "4i",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        }
+      ]
+    },
+    "memo/note_1-100.json": {
+      "data": [
+        {
+          "title": "test1",
+          "content": "test1c<custom-image id=\"c\" />|$<custom-image id=\"9\" />",
+          "createdAt": "2023-04-08T16:00:00.001Z",
+          "updatedAt": "2023-04-08T16:00:00.001Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:00:00.002Z",
+          "categoryId": 0,
+          "images": [
+            "c",
+            "9"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 1
+        },
+        {
+          "title": "test100_changed",
+          "content": "test100_changed_content",
+          "createdAt": "2023-04-08T16:01:00.001Z",
+          "updatedAt": "2023-04-08T16:03:00.001Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:03:00.002Z",
+          "categoryId": 0,
+          "images": [],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 100
+        }
+      ]
+    },
+    "memo/note_101-200.json": {
+      "data": [
+        {
+          "title": "test101",
+          "content": "test101c<custom-image id=\"55555555553\" />|$<custom-image id=\"4i\" />",
+          "createdAt": "2023-04-08T16:02:00.001Z",
+          "updatedAt": "2023-04-08T16:04:00.000Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "2023-04-08T16:04:00.000Z",
+          "syncedAt": "2023-04-08T16:04:00.001Z",
+          "categoryId": 0,
+          "images": [
+            "55555555553",
+            "4i"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 101
+        }
+      ]
+    },
+    "memo/syncInfo.json": {
+      "notes": {
+        "1": {
+          "updatedAt": "2023-04-08T16:03:00.001Z",
+          "syncedAt": "2023-04-08T16:03:00.002Z"
+        },
+        "101": {
+          "updatedAt": "2023-04-08T16:04:00.000Z",
+          "syncedAt": "2023-04-08T16:04:00.001Z"
+        }
+      },
+      "categories": {
+        "updatedAt": "1970-01-01T00:00:00.000Z"
+      }
+    }
+  }
+}

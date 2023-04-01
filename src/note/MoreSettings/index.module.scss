@@ -1,0 +1,14 @@
+.root {
+  position: relative;
+  .menu {
+    position: absolute;
+    right: 15px;
+    top: 100%;
+    border: 1px solid #aaa;
+    border-radius: 8px;
+    width: 100px;
+    a:hover {
+      color: unset;
+    }
+  }
+}

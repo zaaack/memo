@@ -1,0 +1,105 @@
+{
+  "db": [
+    {
+      "table": "notes",
+      "rows": [
+        {
+          "title": "test1",
+          "content": "test1c<custom-image id=\"c\" />|$<custom-image id=\"9\" />",
+          "createdAt": "2023-04-08T16:00:00.001Z",
+          "updatedAt": "2023-04-08T16:00:00.001Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:00:00.002Z",
+          "categoryId": 0,
+          "images": [
+            "c",
+            "9"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 1
+        }
+      ]
+    },
+    {
+      "table": "categories",
+      "rows": []
+    },
+    {
+      "table": "images",
+      "rows": [
+        {
+          "id": "9",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "c",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        }
+      ]
+    },
+    {
+      "table": "kvs",
+      "rows": []
+    }
+  ],
+  "syncInfo": {
+    "notes": {
+      "1": {
+        "updatedAt": "2023-04-08T16:00:00.001Z",
+        "syncedAt": "2023-04-08T16:00:00.002Z"
+      }
+    },
+    "categories": {
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    }
+  },
+  "remoteFiles": {
+    "memo/memo.lock": {
+      "timeout": 0
+    },
+    "memo/noteImages_1.json": {
+      "data": [
+        {
+          "id": "c",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        },
+        {
+          "id": "9",
+          "url": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+        }
+      ]
+    },
+    "memo/note_1-100.json": {
+      "data": [
+        {
+          "title": "test1",
+          "content": "test1c<custom-image id=\"c\" />|$<custom-image id=\"9\" />",
+          "createdAt": "2023-04-08T16:00:00.001Z",
+          "updatedAt": "2023-04-08T16:00:00.001Z",
+          "removedAt": "1970-01-01T00:00:00.000Z",
+          "trashedAt": "1970-01-01T00:00:00.000Z",
+          "syncedAt": "2023-04-08T16:00:00.002Z",
+          "categoryId": 0,
+          "images": [
+            "c",
+            "9"
+          ],
+          "topAt": "1970-01-01T00:00:00.000Z",
+          "id": 1
+        }
+      ]
+    },
+    "memo/syncInfo.json": {
+      "notes": {
+        "1": {
+          "updatedAt": "2023-04-08T16:00:00.001Z",
+          "syncedAt": "2023-04-08T16:00:00.002Z"
+        }
+      },
+      "categories": {
+        "updatedAt": "1970-01-01T00:00:00.000Z"
+      }
+    }
+  }
+}

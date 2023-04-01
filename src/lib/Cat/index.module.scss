@@ -1,0 +1,24 @@
+.catGroup {
+  padding: var(--global-padding);
+  padding-left: 0;
+  margin: 0 -var(--global-padding);
+  position: relative;
+  display: flex;
+  align-items: center;
+  .scroller {
+    white-space: nowrap;
+    overflow-y: auto;
+    padding: 0 var(--global-padding);
+    padding-right: 0;
+    flex: 1;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+  }
+  :global(.adm-tag) + :global(.adm-tag) {
+    margin-left: 10px;
+  }
+  .editCats {
+    margin-left: var(--global-padding);
+  }
+}

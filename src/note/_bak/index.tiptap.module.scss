@@ -1,0 +1,43 @@
+.root {
+  letter-spacing: 1px;
+  background-color: var(--adm-color-background);
+  padding-top: 42px;
+  padding-bottom: 22px;
+  .navbar {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 42px;
+    background-color: var(--adm-color-background);
+    z-index: 1000;
+    .cat {
+      flex: 1;
+    }
+  }
+  .title {
+    width: 100%;
+    padding: 12px 15px;
+    box-sizing: border-box;
+    overflow: hidden;
+    resize: none;
+    appearance: none;
+    outline: none;
+    border: none;
+    font-size: 18px;
+    line-height: normal;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-family: var(--adm-font-family);
+  }
+  .info {
+    padding: 0 15px;
+    font-size: 12px;
+    margin: -8px 0 0px;
+  }
+  .content {
+    min-height: calc(100vh - 84px - 48px - 17px);
+    border: none;
+  }
+}
