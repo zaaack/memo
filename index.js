@@ -1,1 +1,1 @@
-module.exports = require('./start-proxy').getProxyServer()
+require('./proxy').listen(3002)

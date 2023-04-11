@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "foy test",
     "test:debug": "foy test:debug",
-    "update-snaps": "foy update-snaps"
+    "update-snaps": "foy update-snaps",
+    "deploy": "yarn build && vercel --prod"
   },
   "dependencies": {
     "@vercel/node": "^2.10.3",

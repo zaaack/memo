@@ -12,7 +12,11 @@ exports.getProxyServer = function (port) {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,MKCOL,COPY,MOVE,PROPFIND,OPTIONS,LOCK',
   }), function (req, res) {
     try {
+
+      res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
+
       let target = req.url.slice(1)
+      target = target.replace(/:\/(\w+)/g, '://$1')
       console.log(req.method, target)
       if (target.startsWith('http')) {
         proxy.web(req, res, {
@@ -33,7 +37,7 @@ exports.getProxyServer = function (port) {
     }
   });
 
-  app.get('*', express.static('./dist'))
+  app.use('/static', express.static('./dist'))
 
   if (port) {
     console.log("listening on port " + port)

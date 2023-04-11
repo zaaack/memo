@@ -23,7 +23,7 @@ class RemoteDB {
     const conf = kv.settings.get().webdav;
     return (this.client = createClient(
       // `http://127.0.0.1:1900/`,
-      conf.url ? `${this.proxyUrl}/${conf.url}` : "",
+      conf.url ? `${this.proxyUrl}/${(conf.url)}` : "",
       // `http://127.0.0.1:3010/proxy/https://dav.jianguoyun.com/dav/`,
       {
         authType: AuthType.Password,
