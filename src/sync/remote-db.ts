@@ -14,8 +14,8 @@ const WaitHack = 0
 class RemoteDB {
   client: WebDAVClient;
   proxyUrl = process.env.NODE_ENV === "development"
-  ? `http://127.0.0.1:3010/proxy`
-  : "/proxy"
+  ? `http://127.0.0.1:3010/api/proxy`
+  : "/api/proxy"
   constructor() {
     this.client = this.updateConfig();
   }

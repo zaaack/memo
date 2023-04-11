@@ -6,7 +6,7 @@ const { default: axios } = require('axios');
 exports.getProxyServer = function (port) {
   const app = express()
   var proxy = httpProxy.createProxyServer({});
-  app.use('/proxy', cors({
+  app.use('/api/proxy', cors({
     credentials: true,
     origin(o, c) { return c(null, true) },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,MKCOL,COPY,MOVE,PROPFIND,OPTIONS,LOCK',
@@ -37,7 +37,7 @@ exports.getProxyServer = function (port) {
     }
   });
 
-  app.use('*', express.static('./dist'))
+  // app.use('*', express.static('./dist'))
 
   if (port) {
     console.log("listening on port " + port)

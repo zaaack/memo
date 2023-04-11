@@ -1,1 +1,1 @@
-module.exports = require('../start-proxy').getProxyServer(process.env.PORT)
+module.exports = require('../start-proxy').getProxyServer()
