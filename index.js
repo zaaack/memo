@@ -1,1 +1,1 @@
-require('./proxy').listen(3002)
+require('./start-proxy').getProxyServer(process.env.PORT || 3000)

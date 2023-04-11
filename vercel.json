@@ -1,5 +1,0 @@
-{
-  "outputDirectory": "dist",
-  "rewrites": [{ "source": "/proxy/(.*)", "destination": "/proxy" }],
-  "trailingSlash": false
-}

@@ -37,7 +37,7 @@ exports.getProxyServer = function (port) {
     }
   });
 
-  app.use('/static', express.static('./dist'))
+  app.use('*', express.static('./dist'))
 
   if (port) {
     console.log("listening on port " + port)

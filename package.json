@@ -5,14 +5,14 @@
   "license": "MIT",
   "private": "true",
   "scripts": {
-    "start": "PORT=5000 node .",
+    "start": "PORT=3000 node .",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "foy test",
     "test:debug": "foy test:debug",
     "update-snaps": "foy update-snaps",
-    "deploy": "yarn build && vercel --prod"
+    "deploy": "yarn build && git add -A && git commit -m f && git push origin master && vercel --prod"
   },
   "dependencies": {
     "@vercel/node": "^2.10.3",
