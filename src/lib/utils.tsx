@@ -52,6 +52,10 @@ export async function moveNote({
       <CheckList
         defaultValue={notes.length === 1 ? [notes[0].categoryId + ""] : void 0}
         onChange={(e) => {
+          if (isNaN(Number(e[0]))) {
+            console.error('invalid move to cat id:'+e)
+            return
+          }
           Note.move(notes, Number(e[0]))
           onMove?.();
           Dialog.clear();
