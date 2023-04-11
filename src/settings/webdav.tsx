@@ -1,6 +1,5 @@
 import { Button, Form, Input, Toast } from 'antd-mobile';
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router';
 import { kv } from '../kv';
 import { NavBar } from '../lib/NavBar';
 import { remoteDb } from '../sync/remote-db';
@@ -11,7 +10,6 @@ export interface Props {
 }
 
 export function Webdav(props: Props) {
-  const navigate = useNavigate();
   const [isEdited, setIsEdited] = useState(false)
   return (
     <Form

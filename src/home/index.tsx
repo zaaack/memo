@@ -26,7 +26,7 @@ import {
 import { CapsuleTab } from "antd-mobile/es/components/capsule-tabs/capsule-tabs";
 import { useLiveQuery } from "dexie-react-hooks";
 import React, { useCallback, useEffect, useId, useState } from "react";
-import { Link, useBeforeUnload } from "react-router-dom";
+import { Link,  } from "react-router-dom";
 import { db, Image } from "../db";
 import { Category } from "../db/Category";
 import { Note } from "../db/Note";
@@ -121,6 +121,7 @@ function Memo(props: Props) {
         notes.filter((n) => !topNotes.some((t) => t.id === n.id))
       );
       console.timeEnd("notes");
+      console.log('notes', notes.length)
       let noteImages = new Map<number, Image>(
         (
           await Promise.all(
@@ -150,6 +151,7 @@ function Memo(props: Props) {
     },
     [curCatId, limit, search]
   );
+  console.log('data', data.notes.length)
   useScrollToLoadMore(() => {
     console.log("loadmore");
     setLimit((l) => l + 30);
@@ -175,7 +177,9 @@ function Memo(props: Props) {
         categories={categories}
       />
 
-      <div className={css.notes}>
+      <div className={css.notes} onContextMenu={e=>{
+        e.preventDefault()
+      }}>
         {toColumnNotes(data?.notes)?.map((n) => {
           const img = data?.noteImages.get(n.id!);
           return (
@@ -227,8 +231,10 @@ function Memo(props: Props) {
         </FloatingBubble>
       )}
       <Link
-        to={`/note/new?catId=${Math.max(curCatId, 0)}`}
-        state={{ catId: Math.max(curCatId, 0) }}
+        to={{
+          pathname: '/note/new',
+          state: { catId: Math.max(curCatId, 0) },
+        }}
       >
         <FloatingBubble
           style={{

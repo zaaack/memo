@@ -26,10 +26,14 @@ function QuillEditor(props: Props) {
       }, 100)
     }
     // HACK: text-change not fired some times
-    el?.addEventListener('keyup', handleChange)
-    editor.on('text-change', handleChange)
     editor.clipboard.dangerouslyPasteHTML(props.defaultValue)
     props.getEditor?.(editor)
+    el?.addEventListener('keyup', handleChange)
+    editor.on('text-change', handleChange)
+    return () => {
+    el?.removeEventListener('keyup', handleChange)
+    editor.off('text-change', handleChange)
+    }
   }, [rootRef.current]);
   return <div ref={rootRef} className={props.className}></div>;
 }

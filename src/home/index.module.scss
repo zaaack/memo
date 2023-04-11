@@ -31,6 +31,8 @@ body {
   padding: var(--global-padding);
   box-sizing: border-box;
   padding-top: calc(75px + var(--global-padding));
+  user-select: none;
+
   &.search {
     padding-top: calc(40px + var(--global-padding));
   }

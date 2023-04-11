@@ -136,12 +136,16 @@ class NoteService {
     //   })
     // )
     for (const n of notes) {
-      await db.notes.update(n.id!, { trashedAt: Date.now()})
+      n.trashedAt = n.updatedAt = Date.now()
+      await db.notes.update(n.id!, n)
+      syncHelper.updateNoteSyncInfo(n)
     }
   }
   async move(notes:Note[], catId: number) {
     await db.notes.bulkPut(notes.map(n => {
       n.categoryId = catId
+      n.updatedAt = Date.now()
+      syncHelper.updateNoteSyncInfo(n)
       return n
     }))
   }
@@ -149,12 +153,16 @@ class NoteService {
     const isAllTop = notes.every((c) => c.topAt);
     db.notes.bulkPut(notes.map(n => {
       n.topAt = isAllTop ? 0 : Date.now()
+      n.updatedAt = Date.now()
+      syncHelper.updateNoteSyncInfo(n)
       return n
     }))
   }
   async untrash(notes: Note[]) {
     await db.notes.bulkPut(notes.map(n => {
       n.trashedAt = 0
+      n.updatedAt = Date.now()
+      syncHelper.updateNoteSyncInfo(n)
       return n
     }))
   }
@@ -165,6 +173,8 @@ class NoteService {
         n.content = "";
         n.title = "";
         n.images = []
+        n.updatedAt = Date.now()
+        syncHelper.updateNoteSyncInfo(n)
         return n;
       })
     );

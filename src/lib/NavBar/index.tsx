@@ -1,7 +1,6 @@
 import { cx } from '@emotion/css'
 import { NavBarProps, NavBar as AmdNavBar } from 'antd-mobile'
 import React from 'react'
-import { useNavigate } from 'react-router'
 import { BackButton } from '../BackButton'
 import { defaults } from '../defaults'
 import css from './index.module.scss'

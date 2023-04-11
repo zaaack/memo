@@ -10,33 +10,39 @@ import { Note100, NoteImages } from "./sync-helper";
 //   console.log('patch')
 //   return axios({...opts, timeout: 0})
 // })
-const WaitHack = 0
+const WaitHack = 0;
 class RemoteDB {
-  client: WebDAVClient;
-  proxyUrl = process.env.NODE_ENV === "development"
-  ? `http://127.0.0.1:3010/api/proxy`
-  : "/api/proxy"
+  client?: WebDAVClient;
+  proxyUrl =
+    process.env.NODE_ENV === "development"
+      ? `http://127.0.0.1:3010/api/proxy/`
+      : ("plus" in window || '_cordovaNative' in window)
+      ? ""
+      : "/api/proxy/";
   constructor() {
     this.client = this.updateConfig();
   }
   updateConfig() {
     const conf = kv.settings.get().webdav;
+    if (!conf) {
+      return;
+    }
     return (this.client = createClient(
       // `http://127.0.0.1:1900/`,
-      conf.url ? `${this.proxyUrl}/${(conf.url)}` : "https://www.example.com",
+      conf.url ? `${this.proxyUrl}${conf.url}` : "https://www.example.com",
       // `http://127.0.0.1:3010/proxy/https://dav.jianguoyun.com/dav/`,
       {
         authType: AuthType.Password,
         username: conf.user,
         password: conf.pass,
         maxBodyLength: Number.MAX_SAFE_INTEGER,
-        maxContentLength:Number.MAX_SAFE_INTEGER,
+        maxContentLength: Number.MAX_SAFE_INTEGER,
       }
     ));
   }
   async test() {
     try {
-      await this.client.exists("/memo");
+      await this.client?.exists("/memo");
       return true;
     } catch (error) {
       console.error(error);
@@ -45,7 +51,7 @@ class RemoteDB {
   }
   private async _tryGetJson<T>(fn: string, defaults: T) {
     try {
-      let rf = await this.client.getFileContents(fn, { format: "text" });
+      let rf = await this.client?.getFileContents(fn, { format: "text" });
       await sleep(WaitHack);
       return JSON.parse(rf as string) as T;
     } catch (err) {
@@ -53,11 +59,11 @@ class RemoteDB {
     }
   }
   private async _putJson(file: string, data: any) {
-    await this.client.putFileContents(
-      file,
-      JSON.stringify(data),
-      { overwrite: true, contentLength: false, data: JSON.stringify(data), }
-    );
+    await this.client?.putFileContents(file, JSON.stringify(data), {
+      overwrite: true,
+      contentLength: false,
+      data: JSON.stringify(data),
+    });
   }
   note100Filename(id100: number) {
     if (id100 % 100 !== 1) throw new Error("invalid id100:" + id100);
@@ -68,19 +74,16 @@ class RemoteDB {
   }
   async getSyncInfo() {
     return this._tryGetJson<SyncInfo>(`/memo/syncInfo.json`, {
-      notes:{},
-      categories: { updatedAt: new Date(0).toISOString() }
+      notes: {},
+      categories: { updatedAt: new Date(0).toISOString() },
     });
   }
   async setSyncInfo(info: SyncInfo) {
-    await this._putJson(
-      `/memo/syncInfo.json`,
-      info,
-    );
+    await this._putJson(`/memo/syncInfo.json`, info);
     await sleep(WaitHack);
   }
   async getNoteImages(note: Note) {
-    if (!note.images.length) return { data: [] }
+    if (!note.images.length) return { data: [] };
     return this._tryGetJson<NoteImages>(
       "/memo/" + this.noteImagesFilename(note.id!),
       { data: [] }
@@ -94,36 +97,27 @@ class RemoteDB {
   async setNoteImages(id: number, ni: NoteImages) {
     if (!ni.data.length) {
       try {
-        await this.client.deleteFile("/memo/" + this.noteImagesFilename(id))
-      } catch (error:any) {
-        if (!error.message.includes('404')) {
-          console.error(error)
+        await this.client?.deleteFile("/memo/" + this.noteImagesFilename(id));
+      } catch (error: any) {
+        if (!error.message.includes("404")) {
+          console.error(error);
         }
       }
-      return
+      return;
     }
-    await this._putJson(
-      "/memo/" + this.noteImagesFilename(id),
-      ni,
-    );
+    await this._putJson("/memo/" + this.noteImagesFilename(id), ni);
     await sleep(WaitHack);
   }
   async setNote100(id100: number, note100: Note100) {
-    await this._putJson(
-      "/memo/" + this.note100Filename(id100),
-      note100,
-    );
+    await this._putJson("/memo/" + this.note100Filename(id100), note100);
     await sleep(WaitHack);
   }
   async setCategories(cats: Category[]) {
-    await this._putJson(
-      "/memo/categories.json",
-      cats,
-    );
+    await this._putJson("/memo/categories.json", cats);
     await sleep(WaitHack);
   }
   async getCategories() {
-    return this._tryGetJson<Category[]>("/memo/categories.json", [])
+    return this._tryGetJson<Category[]>("/memo/categories.json", []);
   }
   async updateRemoteImages(ln: Note, rn?: Note) {
     if ((rn?.images || []).join(",") !== ln.images.join(",")) {
@@ -142,7 +136,7 @@ class RemoteDB {
       await db.images.bulkAdd(images.data);
       await db.notes.add(rn);
     } else {
-      await db.notes.update(rn.id!, rn);
+    await db.notes.update(rn.id!, rn);
       if (ln.images.join(",") !== rn.images.join(",")) {
         let images = await remoteDb.getNoteImages(rn);
         let localDeletes: string[] = [];
@@ -165,20 +159,16 @@ class RemoteDB {
   async lock() {
     let lock = await this._tryGetJson("/memo/memo.lock", { timeout: 0 });
     if (!lock || Date.now() >= lock.timeout) {
-      await this._putJson(
-        "/memo/memo.lock",
-        { timeout: Date.now() + 1 * 60 * 1000 },
-      );
+      await this._putJson("/memo/memo.lock", {
+        timeout: Date.now() + 1 * 60 * 1000,
+      });
       await sleep(WaitHack);
     } else {
       throw new Error("memo sync is locked");
     }
   }
   async unlock() {
-    await this._putJson(
-      "/memo/memo.lock",
-      { timeout: 0 },
-    );
+    await this._putJson("/memo/memo.lock", { timeout: 0 });
     await sleep(WaitHack);
   }
 }

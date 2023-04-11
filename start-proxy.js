@@ -13,8 +13,6 @@ exports.getProxyServer = function (port) {
   }), function (req, res) {
     try {
 
-      res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
-
       let target = req.url.slice(1)
       target = target.replace(/:\/(\w+)/g, '://$1')
       console.log(req.method, target)

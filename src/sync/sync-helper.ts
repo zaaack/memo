@@ -16,16 +16,15 @@ export interface NoteImages {
 }
 
 db.notes.hook("updating", async (changes: any, id, n, t) => {
-  if (!syncHelper.isSyncing) {
-    let now = Date.now()
-    changes["updatedAt"] = now
-    let newN = { ...n, ...changes };
-    if (changes['trashedAt']) {
-      console.log('update trashed', changes)
-    }
-    await t.table('notes').update(id, { updatedAt: now})
-    syncHelper.updateNoteSyncInfo(newN);
-  }
+  console.log('update.note', changes, id)
+  // if (!syncHelper.isSyncing) {
+  //   let now = Date.now()
+  //   changes["updatedAt"] = now
+  //   let newN = { ...n, ...changes };
+  //   console.log('update updated', changes, id, new Error().stack)
+  //   await t.table('notes').update(id, { updatedAt: now})
+  //   syncHelper.updateNoteSyncInfo(newN);
+  // }
 });
 
 class SyncHelper {
@@ -60,9 +59,10 @@ class SyncHelper {
     if (localStorage.lock) return;
     localStorage.lock = Date.now();
     const client = remoteDb.client;
-    const exists = await client.exists("memo");
+    if (!client) return
+    const exists = await client?.exists("memo");
     if (!exists) {
-      const created = await client.createDirectory("memo");
+      const created = await client?.createDirectory("memo");
       console.log("created", created);
     }
 
@@ -113,7 +113,7 @@ class SyncHelper {
             for (const n of localNote100) {
               let rn = remoteNote100Map.get(n.id!);
               if (!rn || n.updatedAt !== rn.updatedAt) {
-                await updateRemoteNoteAndImages(n, rn);
+                /*await*/ updateRemoteNoteAndImages(n, rn);
               }
             }
           } else {
@@ -127,7 +127,7 @@ class SyncHelper {
                   (rn.syncedAt === n.syncedAt && n.updatedAt > n.syncedAt!))
               ) {
                 // 服务端无更新且本地有更新, 直接覆盖服务端
-                await updateRemoteNoteAndImages(n, rn);
+                /*await*/ updateRemoteNoteAndImages(n, rn);
               } else if (
                 (rn && n && n.updatedAt === rn.updatedAt) ||
                 (!n && !rn)
@@ -142,7 +142,7 @@ class SyncHelper {
                     n.updatedAt <= n.syncedAt))
               ) {
                 // 服务端有更新, 本地无笔记或者笔记上次更新后未修改，可以直接更新本地
-                await remoteDb.updateLocalNoteAndImages(rn, n);
+                /*await*/ remoteDb.updateLocalNoteAndImages(rn, n);
               } else if (
                 rn &&
                 n &&
@@ -153,11 +153,11 @@ class SyncHelper {
                 // final note, conflict note
                 if (rn.updatedAt > n.updatedAt) {
                   // 服务端更新直接覆盖本地
-                  await remoteDb.updateLocalNoteAndImages(rn, n);
+                  /*await*/ remoteDb.updateLocalNoteAndImages(rn, n);
                   conflictNotes.push(n);
                 } else {
                   // 本地更新同步到服务端
-                  await updateRemoteNoteAndImages(n, rn);
+                  /*await*/ updateRemoteNoteAndImages(n, rn);
                   conflictNotes.push(rn);
                 }
                 // 储存冲突笔记放最后添加
@@ -171,10 +171,10 @@ class SyncHelper {
             ).toISOString();
           }
           remoteNote100.data = Array.from(remoteNote100Map.values());
-          await remoteDb.setNote100(id100, remoteNote100);
+          /*await*/ remoteDb.setNote100(id100, remoteNote100);
           s.syncedAt = new Date(now).toISOString();
           kv.syncInfo.set(localSyncInfo);
-          await remoteDb.setSyncInfo(localSyncInfo);
+          /*await*/ remoteDb.setSyncInfo(localSyncInfo);
         } else if (
           rs &&
           new Date(s.syncedAt) < new Date(rs.syncedAt!) &&
@@ -190,7 +190,7 @@ class SyncHelper {
           for (const rn of remoteNote100.data) {
             let ln = localNote100Map.get(rn.id);
             if (!ln || ln.updatedAt !== rn.updatedAt) {
-              await remoteDb.updateLocalNoteAndImages(rn, ln);
+              /*await*/ remoteDb.updateLocalNoteAndImages(rn, ln);
             }
           }
           s.updatedAt = rs.updatedAt;
@@ -211,7 +211,7 @@ class SyncHelper {
           for (const rn of remoteNote100.data) {
             let ln = localNote100Map.get(rn.id);
             if (!ln || ln.updatedAt !== rn.updatedAt) {
-              await remoteDb.updateLocalNoteAndImages(rn, ln);
+              /*await*/ remoteDb.updateLocalNoteAndImages(rn, ln);
             }
           }
           localSyncInfo.notes[_id100Str] = remoteSyncInfo.notes[_id100Str];
@@ -226,12 +226,12 @@ class SyncHelper {
         let [lc, rc] = [localSyncInfo.categories, remoteSyncInfo.categories];
         if (lc.updatedAt > rc.updatedAt) {
           let cats = await db.categories.toArray();
-          await remoteDb.setCategories(cats);
+          /*await*/ remoteDb.setCategories(cats);
           remoteSyncInfo.categories = lc;
-          await remoteDb.setSyncInfo(remoteSyncInfo);
+          /*await*/ remoteDb.setSyncInfo(remoteSyncInfo);
         } else {
           let rcats = await remoteDb.getCategories();
-          await db.categories.bulkPut(rcats);
+          /*await*/ db.categories.bulkPut(rcats);
           localSyncInfo.categories = lc;
           kv.syncInfo.set(localSyncInfo);
         }

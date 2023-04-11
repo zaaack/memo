@@ -4,7 +4,8 @@ import { db, Image } from "../db";
 import { Category } from "../db/Category";
 import { Note } from "../db/Note";
 import { syncHelper } from "../sync/sync-helper";
-
+import { createHashHistory } from "history";
+export const history = createHashHistory()
 export function useScrollToLoadMore(cb: () => void, deps?: any[]) {
   let _cb = useEvent(cb)
   useEffect(() => {

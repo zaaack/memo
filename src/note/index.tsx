@@ -1,21 +1,20 @@
 import { Button, Tag } from "antd-mobile";
 import {
   useCallback,
+  useContext,
   useDeferredValue,
   useEffect,
   useRef,
   useState,
 } from "react";
-import { useBeforeUnload, useParams } from "react-router-dom";
+import { useHistory, useLocation, useParams } from "react-router-dom";
 
 import "react-quill/dist/quill.snow.css";
 import css from "./index.quill.module.scss";
-import { useLiveQuery } from "dexie-react-hooks";
 import { Note } from "../db/Note";
 import dayjs from "dayjs";
 import { toText } from "../utils";
 import { CheckOutline, RedoOutline, UndoOutline } from "antd-mobile-icons";
-import { useLocation, useNavigate, useNavigation } from "react-router";
 import { MoreSettings } from "./MoreSettings";
 import Quill from "quill";
 import QuillEditor from "./QuillEditor";
@@ -26,6 +25,8 @@ import { BackButton } from "../lib/BackButton";
 // import { NavBar } from "../lib/NavBar";
 import { Cat } from "../lib/Cat";
 import { NavBar } from "../lib/NavBar";
+import {  useEvent } from "../lib/utils";
+import { useLiveQuery } from "../home/utils";
 
 {
   let Image = Quill.import("formats/image");
@@ -58,18 +59,17 @@ const modules = {
 };
 
 export function NotePage(props: Props) {
-  console.time("quill");
   console.log(new Date().toLocaleTimeString());
+  const history = useHistory()
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const contentForLength = useDeferredValue(content);
   const [isEdited, setIsEdited] = useState(false);
   const params = useParams<{ id: string }>();
-  const loc = useLocation();
+  const loc = useLocation<{catId: number}>();
   const editorRef = useRef<Quill>();
   const [titleHeight, setTitltHeight] = useState(0);
-  const navigate = useNavigate();
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const updateTitleHeigth = (title: string) => {
     let e = titleRef.current;
@@ -83,40 +83,46 @@ export function NotePage(props: Props) {
     e.parentElement?.removeChild(div);
   };
   const [note, cat, images] = useLiveQuery(async () => {
+    console.time("quill");
+    console.time('getNote')
     let { note, cat, title, images, content } = await Note.getEditNote(
       params.id || "new",
       loc.state?.catId
     );
+    console.timeEnd('getNote')
     setTitle(title);
     setContent(content);
     return [note, cat, images];
   }, [params.id]) || [void 0, void 0, []];
-  let onTextChange = useCallback(
+  let onTextChange = useEvent(
     (t: string) => {
       setContent(t);
       setIsEdited(true);
     },
-    [setContent, setIsEdited]
   );
-  async function saveNote() {
+  const saveNote = useEvent(async function saveNote() {
+    setIsEdited(false);
     if ((title || content) && note && isEdited) {
+      console.log('saveNote')
       await Note.saveEditNote(note, { title, content, images });
       syncHelper.sync();
     }
-    setIsEdited(false);
-  }
-  useEffect(() => {
-    return () => {
-      saveNote();
-    };
-  }, []);
+  })
   useEffect(() => {
     updateTitleHeigth(note?.title || "哈");
   }, [note]);
-  useBeforeUnload(saveNote);
+  useEffect(() => {
+    window.addEventListener('beforeunload', saveNote)
+    return () => {
+      window.removeEventListener('beforeinput', saveNote)
+    }
+  }, [])
+  useEffect(() => {
+    return history.listen(saveNote)
+  }, [])
 
   if (note === null) {
-    navigate("/");
+      history.push("/");
     return null;
   } else if (note === void 0) {
     return null;

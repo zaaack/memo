@@ -2,20 +2,21 @@ import { Button, Dialog, List, Modal } from "antd-mobile";
 import { MoreOutline } from "antd-mobile-icons";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 import { db } from "../../db";
 import { Note } from "../../db/Note";
-import { moveNote } from "../../lib/utils";
+import {  moveNote } from "../../lib/utils";
 import { syncHelper } from "../../sync/sync-helper";
 import { toText } from "../../utils";
 import css from "./index.module.scss";
+import { useHistory } from "react-router";
 export interface Props {
   note: Note;
 }
 
 export function MoreSettings(props: Props) {
   const [visible, setVisible] = useState(false);
-  const navigate = useNavigate();
+  const history = useHistory()
+
   useEffect(() => {
     let hide = () => setVisible(false);
     document.body.addEventListener("click", hide);
@@ -88,8 +89,7 @@ export function MoreSettings(props: Props) {
               if (props.note.id) {
                 db.notes.update(props.note.id, { trashedAt: Date.now() });
               }
-
-              navigate(-1);
+              history.go(-1)
             }}
           >
             删除

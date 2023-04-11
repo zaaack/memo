@@ -9,8 +9,7 @@ import {
 } from "antd-mobile";
 import { LeftOutline } from "antd-mobile-icons";
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { db } from "../db";
 import { kv } from "../kv";
 import { BackButton } from "../lib/BackButton";
@@ -24,13 +23,14 @@ import { openFileDialog } from "../lib/open-file-dialog";
 export interface Props {}
 
 export function Settings(props: Props) {
-  const navigate = useNavigate();
   const [isEdited, setIsEdited] = useState(false);
+  const history = useHistory()
+
   return (
     <div>
       <NavBar>设置</NavBar>
       <List>
-        <List.Item onClick={(e) => navigate("/settings/webdav")}>
+        <List.Item onClick={(e) => history.push("/settings/webdav")}>
           配置webdav同步
         </List.Item>
         <List.Item
@@ -90,7 +90,7 @@ export function Settings(props: Props) {
                   danger: true,
                   onClick() {
                     db.clean(false);
-                    navigate("/");
+                    history.push("/");
                     location.reload();
                   },
                 },
@@ -100,7 +100,7 @@ export function Settings(props: Props) {
                   danger: true,
                   onClick() {
                     db.clean(true);
-                    navigate("/");
+                    history.push("/");
                     location.reload();
                   },
                 },
