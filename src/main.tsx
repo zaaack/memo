@@ -14,6 +14,7 @@ import { Webdav } from "./settings/webdav";
 import { syncHelper } from "./sync/sync-helper";
 import { Trash } from "./trash";
 import { initCordova } from "./utils/cordova";
+import { AnimatedSwitch } from "./lib/AnimatedSwitch";
 (window as any)["syncHelper"] = syncHelper;
 (window as any)["kv"] = kv;
 initCordova();
@@ -34,7 +35,7 @@ function Main() {
   return (
     <React.StrictMode>
       <HashRouter>
-        <Switch>
+        <AnimatedSwitch>
           <Route path="/" exact>
             <Memo />
           </Route>
@@ -50,7 +51,7 @@ function Main() {
           <Route>
             <div>No Match</div>
           </Route>
-        </Switch>
+        </AnimatedSwitch>
       </HashRouter>
     </React.StrictMode>
   );
