@@ -42,12 +42,12 @@ function Main() {
           <Route path="/note/:id">
             <NotePage />
           </Route>
-          <Route path="/settings">
+          <Route path="/settings/webdav" exact component={Webdav} />
+          <Route path="/settings" exact>
             <Settings />
           </Route>
-          <Route path="/settings/webdav" component={Webdav} />
-          <Route path="/trash" component={Trash} />
-          <Route path="/categories" component={Categories} />
+          <Route path="/trash" exact component={Trash} />
+          <Route path="/categories" exact component={Categories} />
           <Route>
             <div>No Match</div>
           </Route>
