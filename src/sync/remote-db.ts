@@ -1,33 +1,54 @@
 import axios from "axios";
-import { AuthType, createClient, WebDAVClient, getPatcher } from "webdav";
-import { db, Image } from "../db";
-import { Category } from "../db/Category";
-import { Note } from "../db/Note";
+import {
+  AuthType,
+  createClient,
+  WebDAVClient,
+  getPatcher,
+  type BufferLike,
+} from "webdav";
 import { kv, Settings, SyncInfo } from "../kv";
-import { sleep } from "../utils";
-import { Note100, NoteImages } from "./sync-helper";
-// getPatcher().patch('request', (opts: any) => {
-//   console.log('patch')
-//   return axios({...opts, timeout: 0})
-// })
-const WaitHack = 0;
+import { imageToBlobURL, sleep } from "../utils";
+import dayjs from "dayjs";
+import asyncReplace from "@egoist/async-replace";
+
+export interface FolderMeta {
+  id: number;
+  locked: number;
+  toped: number[];
+}
+export interface Meta {
+  folderSort: string[];
+}
+export interface NoteInfo {
+  folder: string;
+  id: number;
+  title: string;
+  lastmod: dayjs.Dayjs;
+  toped?: boolean;
+  cover?: string;
+}
+export interface Note extends NoteInfo {
+  content: string;
+}
+
 class RemoteDB {
   client?: WebDAVClient;
   proxyUrl =
     process.env.NODE_ENV === "development"
-      ? `http://127.0.0.1:3010/api/proxy/`
-      : ("plus" in window || '_cordovaNative' in window)
+      ? `http://127.0.0.1:3000/api/proxy/`
+      : "plus" in window || "_cordovaNative" in window
       ? ""
       : "/api/proxy/";
   constructor() {
     this.client = this.updateConfig();
   }
+  private basePath = "WebdavMemo";
   updateConfig() {
     const conf = kv.settings.get().webdav;
     if (!conf) {
       return;
     }
-    return (this.client = createClient(
+    let client = (this.client = createClient(
       // `http://127.0.0.1:1900/`,
       conf.url ? `${this.proxyUrl}${conf.url}` : "https://www.example.com",
       // `http://127.0.0.1:3010/proxy/https://dav.jianguoyun.com/dav/`,
@@ -39,137 +60,314 @@ class RemoteDB {
         maxContentLength: Number.MAX_SAFE_INTEGER,
       }
     ));
+    client
+      .exists(this.basePath)
+      .then(async (exists) => {
+        if (!exists) {
+          client.createDirectory(this.basePath);
+          this.addFolder("默认");
+        }
+      })
+      .catch(console.error);
+    return client;
   }
   async test() {
     try {
-      await this.client?.exists("/memo");
+      await this.client?.exists(this.basePath);
       return true;
     } catch (error) {
       console.error(error);
       return false;
     }
   }
-  private async _tryGetJson<T>(fn: string, defaults: T) {
-    try {
-      let rf = await this.client?.getFileContents(fn, { format: "text" });
-      await sleep(WaitHack);
-      return JSON.parse(rf as string) as T;
-    } catch (err) {
-      return defaults;
+  async getFolders() {
+    let folders = await this.client?.getDirectoryContents(this.basePath);
+    if (!Array.isArray(folders)) {
+      folders = folders?.data;
     }
+    return folders
+      ?.filter(
+        (f) =>
+          f.type === "directory" &&
+          f.basename !== ".trash" &&
+          f.basename !== this.basePath
+      )
+      .sort((a, b) => -Date.parse(a.lastmod) + Date.parse(b.lastmod))
+      .map((f) => f.basename);
   }
-  private async _putJson(file: string, data: any) {
-    await this.client?.putFileContents(file, JSON.stringify(data), {
-      overwrite: true,
-      contentLength: false,
-      data: JSON.stringify(data),
-    });
+  async deleteFolder(folder: string) {
+    let meta = await this.getMeta();
+    meta.folderSort = meta.folderSort.filter((f) => f !== folder);
+    await this.saveMeta(meta);
+    await this.client?.deleteFile(`${this.basePath}/${folder}`);
   }
-  note100Filename(id100: number) {
-    if (id100 % 100 !== 1) throw new Error("invalid id100:" + id100);
-    return `note_${id100}-${id100 + 100 - 1}.json`;
+  async addFolder(folder: string) {
+    let meta = await this.getMeta();
+    meta.folderSort.push(folder);
+    await this.saveMeta(meta);
+    await this.client?.createDirectory(`${this.basePath}/${folder}`);
   }
-  noteImagesFilename(id: number) {
-    return `noteImages_${id}.json`;
-  }
-  async getSyncInfo() {
-    return this._tryGetJson<SyncInfo>(`/memo/syncInfo.json`, {
-      notes: {},
-      categories: { updatedAt: new Date(0).toISOString() },
-    });
-  }
-  async setSyncInfo(info: SyncInfo) {
-    await this._putJson(`/memo/syncInfo.json`, info);
-    await sleep(WaitHack);
-  }
-  async getNoteImages(note: Note) {
-    if (!note.images.length) return { data: [] };
-    return this._tryGetJson<NoteImages>(
-      "/memo/" + this.noteImagesFilename(note.id!),
-      { data: [] }
+  async getNotes(folder: string) {
+    let notes = await this.client?.getDirectoryContents(
+      `${this.basePath}/${folder}`
     );
+    let meta = await this.getFolderMeta(folder);
+    if (!Array.isArray(notes)) {
+      notes = notes?.data;
+    }
+    let n = notes
+      ?.filter((f) => f.type === "file" && f.filename.endsWith(".md"))
+      .sort((a, b) => -Date.parse(a.lastmod) + Date.parse(b.lastmod))
+      .map<NoteInfo>((f) => {
+        let [id, titleWithExt] = f.basename.split("_", 2);
+        return {
+          folder,
+          id: Number(id),
+          title: titleWithExt.replace(/\.\w+$/g, ""),
+          lastmod: dayjs(f.lastmod),
+          toped: meta?.toped?.includes(Number(id)),
+        };
+      });
+    console.log("notes", n);
+    return n;
   }
-  async getNote100(id100: number) {
-    return this._tryGetJson<Note100>("/memo/" + this.note100Filename(id100), {
-      data: [],
-    });
-  }
-  async setNoteImages(id: number, ni: NoteImages) {
-    if (!ni.data.length) {
-      try {
-        await this.client?.deleteFile("/memo/" + this.noteImagesFilename(id));
-      } catch (error: any) {
-        if (!error.message.includes("404")) {
-          console.error(error);
-        }
+  async getOrCreateNote(noteInfo: NoteInfo): Promise<Note | undefined> {
+    if (!noteInfo.id) {
+      return {
+        ...noteInfo,
+        content: "",
+      };
+    }
+    let note = await this.client?.getFileContents(
+      `${this.basePath}/${noteInfo.folder}/${noteInfo.id}_${noteInfo.title}.md`,
+      {
+        format: "text",
       }
+    );
+    if (!note) {
       return;
     }
-    await this._putJson("/memo/" + this.noteImagesFilename(id), ni);
-    await sleep(WaitHack);
+    note = note.toString();
+    return {
+      ...noteInfo,
+      content: note,
+    };
   }
-  async setNote100(id100: number, note100: Note100) {
-    await this._putJson("/memo/" + this.note100Filename(id100), note100);
-    await sleep(WaitHack);
-  }
-  async setCategories(cats: Category[]) {
-    await this._putJson("/memo/categories.json", cats);
-    await sleep(WaitHack);
-  }
-  async getCategories() {
-    return this._tryGetJson<Category[]>("/memo/categories.json", []);
-  }
-  async updateRemoteImages(ln: Note, rn?: Note) {
-    if ((rn?.images || []).join(",") !== ln.images.join(",")) {
-      let images = (
-        await Promise.all(ln.images.map((i) => db.images.get(i)))
-      ).filter<Image>(Boolean as any);
-      let noteImages: NoteImages = {
-        data: images,
-      };
-      await remoteDb.setNoteImages(ln.id!, noteImages);
+  async getNoteCover(note: NoteInfo) {
+    try {
+      let imagesFolder = this.getNoteImagesFolder(note);
+      let images = await this.client?.getDirectoryContents(imagesFolder);
+      if (!Array.isArray(images)) {
+        images = images?.data;
+      }
+      let imgInfo = images?.filter(
+        (f) => f.type === "file" && f.filename.endsWith(".png")
+      )[0];
+      if (imgInfo) {
+        let img = await this.client?.getFileContents(imgInfo.filename, {
+          format: "binary",
+        });
+        return imageToBlobURL(imgInfo.filename, img as BufferLike);
+      }
+    } catch (e) {
+      return;
     }
   }
-  async updateLocalNoteAndImages(rn: Note, ln?: Note) {
-    if (!ln) {
-      let images = await remoteDb.getNoteImages(rn);
-      await db.images.bulkAdd(images.data);
-      await db.notes.add(rn);
-    } else {
-    await db.notes.update(rn.id!, rn);
-      if (ln.images.join(",") !== rn.images.join(",")) {
-        let images = await remoteDb.getNoteImages(rn);
-        let localDeletes: string[] = [];
-        let localAdds: Image[] = [];
-        for (const imgId of ln.images) {
-          if (!images.data.some((d) => d.id === imgId)) {
-            localDeletes.push(imgId);
-          }
-        }
-        for (const img of images.data) {
-          if (!ln.images.some((id) => id === img.id)) {
-            localAdds.push(img);
-          }
-        }
-        await db.images.bulkDelete(localDeletes);
-        await db.images.bulkAdd(localAdds);
+  getNoteImagesFolder(note: NoteInfo) {
+    return `${this.basePath}/${note.folder}/${note.id}_images`;
+  }
+  getImageUrl(note: NoteInfo, fileName: string) {
+    return `${note.id}_images/${fileName}`;
+  }
+  private async _getOrCreateJson<T = any>(url: string, data?: T) {
+    if (await this.client?.exists(url)) {
+      const result = await this.client?.getFileContents(url, {
+        format: "text",
+      });
+      return result ? (JSON.parse(result.toString()) as T) : void 0;
+    }
+    if (data) {
+      if (await this.client?.putFileContents(url, JSON.stringify(data))) {
+        return data;
       }
     }
+    return null;
   }
-  async lock() {
-    let lock = await this._tryGetJson("/memo/memo.lock", { timeout: 0 });
-    if (!lock || Date.now() >= lock.timeout) {
-      await this._putJson("/memo/memo.lock", {
-        timeout: Date.now() + 1 * 60 * 1000,
-      });
-      await sleep(WaitHack);
-    } else {
-      throw new Error("memo sync is locked");
+  async saveImage(note: Note, file: File) {
+    const imagesFolder = this.getNoteImagesFolder(note);
+    if (!(await this.client?.exists(imagesFolder))) {
+      await this.client?.createDirectory(imagesFolder);
     }
+    const fileName = file.name;
+    const filePath = `${imagesFolder}/${fileName}`;
+    if (
+      await this.client?.putFileContents(filePath, await file.arrayBuffer())
+    ) {
+      return this.getImageUrl(note, fileName);
+    }
+    return null;
   }
-  async unlock() {
-    await this._putJson("/memo/memo.lock", { timeout: 0 });
-    await sleep(WaitHack);
+  async restoreNoteImages(note: Note) {
+    note.content = await asyncReplace(
+      note.content,
+      /<custom-image\s+src="(\w+?)"\s*\/>/g,
+      async (_, src) => {
+        let url = `${this.basePath}/${note.folder}/${src}`;
+        let img = await this.client?.getFileContents(url, {
+          format: "binary",
+        });
+        return `<img src="${imageToBlobURL(
+          url,
+          (img as BufferLike).toString("base64url")
+        )}" />`;
+      }
+    );
+    return note;
+  }
+  async saveNoteImages(note: Note) {
+    note.content = await asyncReplace(
+      note.content,
+      /<img\s+src="([^>]+?)"[^>]*?\/?>/g,
+      async (_, url) => {
+        if (url.startsWith("data:")) {
+          try {
+            url = await this.saveImage(
+              note,
+              new File([url], Math.random().toString(36).slice(2) + ".png")
+            );
+          } catch (error) {
+            console.error(error);
+          }
+        }
+        return `<custom-image src="${url}" />`;
+      }
+    );
+  }
+  getNoteUrl(note: NoteInfo) {
+    return `${this.basePath}/${note.folder}/${note.id}_${note.title}.md`;
+  }
+  async getMeta() {
+    const metaFile = `${this.basePath}/meta.json`;
+    let meta = await this._getOrCreateJson<Meta>(metaFile, {
+      folderSort: (await this.getFolders()) || [],
+    });
+    if (!meta) {
+      throw new Error("get meta file error");
+    }
+    return meta;
+  }
+  async saveMeta(meta: Meta) {
+    const metaFile = `${this.basePath}/meta.json`;
+    await this.client?.putFileContents(metaFile, JSON.stringify(meta));
+  }
+
+  async getFolderMeta(folder: string) {
+    const metaFile = `${this.basePath}/${folder}/meta.json`;
+    let meta = await this._getOrCreateJson<FolderMeta>(metaFile, {
+      id: 0,
+      locked: 0,
+      toped: [],
+    });
+    if (!meta) {
+      throw new Error("get meta file error");
+    }
+    return meta;
+  }
+  async saveFolderMeta(folder: string, meta: FolderMeta) {
+    const metaFile = `${this.basePath}/${folder}/meta.json`;
+    await this.client?.putFileContents(metaFile, JSON.stringify(meta));
+  }
+  async aquireMetaLock(folder: string, meta: FolderMeta) {
+    if (Date.now() - meta.locked < 1000 * 60 * 1) {
+      throw new Error("locked, plz try after 1 minutes");
+    }
+    meta.locked = Date.now();
+    await this.saveFolderMeta(folder, meta);
+  }
+  async releaseMetaLock(folder: string, meta: FolderMeta) {
+    meta.locked = 0;
+    await this.saveFolderMeta(folder, meta);
+  }
+  async saveNote(note: Note) {
+    let meta = await this.getFolderMeta(note.folder);
+    if (!note.id) {
+      note.id = ++meta.id;
+    }
+    if (note.toped) {
+      meta.toped.push(note.id);
+      meta.toped = Array.from(new Set(meta.toped));
+    } else {
+      meta.toped = meta.toped.filter((id) => id !== note.id);
+    }
+    await this.aquireMetaLock(note.folder, meta);
+    await this.saveNoteImages(note);
+    const result = await this.client?.putFileContents(
+      this.getNoteUrl(note),
+      note.content,
+      {
+        overwrite: true,
+      }
+    );
+    await this.releaseMetaLock(note.folder, meta);
+    return note;
+  }
+  async deleteNote(note: NoteInfo) {
+    await this.client?.deleteFile(this.getNoteUrl(note));
+    await this.client?.deleteFile(
+      `${this.basePath}/${note.folder}/${note.id}_images`
+    );
+  }
+  async trashNote(note: NoteInfo) {
+    if (!note.id) return;
+    let trashedNote = { ...note, folder: `.trash/${note.folder}` };
+    await this.client?.moveFile(
+      this.getNoteUrl(note),
+      this.getNoteUrl(trashedNote)
+    );
+    await this.client?.moveFile(
+      this.getNoteImagesFolder(note),
+      this.getNoteImagesFolder(trashedNote)
+    );
+  }
+  async restoreNote(trashedNote: NoteInfo) {
+    let note = {
+      ...trashedNote,
+      folder: trashedNote.folder.replace(".trash/", ""),
+    };
+    await this.client?.moveFile(
+      this.getNoteUrl(trashedNote),
+      this.getNoteUrl(note)
+    );
+    await this.client?.moveFile(
+      this.getNoteImagesFolder(trashedNote),
+      this.getNoteImagesFolder(note)
+    );
+  }
+  async moveNote(note: NoteInfo, folder: string) {
+    let meta = await this.getFolderMeta(note.folder);
+    note.toped = meta?.toped?.includes(note.id);
+    if (meta) {
+      meta.toped = meta.toped.filter((id) => id !== note.id);
+      await this.saveFolderMeta(note.folder, meta);
+    }
+    let newMeta = await this.getFolderMeta(folder);
+    note.id = ++newMeta.id;
+    if (note.toped) {
+      newMeta.toped.push(note.id);
+    }
+    await this.aquireMetaLock(folder, newMeta);
+
+    let newNote = { ...note, folder };
+    await this.client?.moveFile(
+      this.getNoteUrl(note),
+
+      this.getNoteUrl(newNote)
+    );
+    await this.client?.moveFile(
+      this.getNoteImagesFolder(note),
+      this.getNoteImagesFolder(newNote)
+    );
+    await this.releaseMetaLock(folder, newMeta);
   }
 }
 

@@ -4,6 +4,8 @@ import {
   useContext,
   useDeferredValue,
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -11,7 +13,7 @@ import { useHistory, useLocation, useParams } from "react-router-dom";
 
 import "react-quill/dist/quill.snow.css";
 import css from "./index.quill.module.scss";
-import { Note } from "../db/Note";
+// import { Note } from "../db/Note";
 import dayjs from "dayjs";
 import { toText } from "../utils";
 import { CheckOutline, RedoOutline, UndoOutline } from "antd-mobile-icons";
@@ -20,13 +22,13 @@ import Quill from "quill";
 import QuillEditor from "./QuillEditor";
 
 import "./keepAttr";
-import { syncHelper } from "../sync/sync-helper";
 import { BackButton } from "../lib/BackButton";
 // import { NavBar } from "../lib/NavBar";
 import { Cat } from "../lib/Cat";
 import { NavBar } from "../lib/NavBar";
-import {  useEvent } from "../lib/utils";
-import { useLiveQuery } from "../home/utils";
+import { useEvent } from "../lib/utils";
+import { remoteDb } from "../sync/remote-db";
+import { useQuery } from "../utils/hooks";
 
 {
   let Image = Quill.import("formats/image");
@@ -36,20 +38,24 @@ export interface Props {}
 const modules = {
   toolbar: [
     [{ header: [1, 2, false] }],
-    ["bold",
-    "italic",
-    "underline",
-    "strike",
-    "blockquote",
-    "link",
-    "image",
-    "code"],
-    [{ list: "ordered" },
-    { list: "bullet" },
-    { list: "check" },
-    { indent: "-1" },
-    { indent: "+1" },
-    "clean"],
+    [
+      "bold",
+      "italic",
+      "underline",
+      "strike",
+      "blockquote",
+      "link",
+      "image",
+      "code",
+    ],
+    [
+      { list: "ordered" },
+      { list: "bullet" },
+      { list: "check" },
+      { indent: "-1" },
+      { indent: "+1" },
+      "clean",
+    ],
   ],
   history: {
     delay: 2000,
@@ -59,15 +65,13 @@ const modules = {
 };
 
 export function NotePage(props: Props) {
-  console.log(new Date().toLocaleTimeString());
-  const history = useHistory()
+  const history = useHistory();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const contentForLength = useDeferredValue(content);
   const [isEdited, setIsEdited] = useState(false);
-  const params = useParams<{ id: string }>();
-  const loc = useLocation<{catId: number}>();
+  const params = useParams<{ filename: string; folder: string }>();
   const editorRef = useRef<Quill>();
   const [titleHeight, setTitltHeight] = useState(0);
   const titleRef = useRef<HTMLTextAreaElement>(null);
@@ -82,47 +86,54 @@ export function NotePage(props: Props) {
     setTitltHeight(div.offsetHeight);
     e.parentElement?.removeChild(div);
   };
-  const [note, cat, images] = useLiveQuery(async () => {
+  const note = useQuery(async () => {
     console.time("quill");
-    console.time('getNote')
-    let { note, cat, title, images, content } = await Note.getEditNote(
-      params.id || "new",
-      loc.state?.catId
-    );
-    console.timeEnd('getNote')
+    console.time("getNote");
+    const [id, title] = params.filename.split("_", 2);
+    let note = await remoteDb.getOrCreateNote({
+      folder: params.folder || "默认",
+      id: Number(id || 0),
+      title: title || "新笔记",
+      lastmod: dayjs(),
+    });
+    console.log("note", note);
+    console.timeEnd("getNote");
     setTitle(title);
-    setContent(content);
-    return [note, cat, images];
-  }, [params.id]) || [void 0, void 0, []];
-  let onTextChange = useEvent(
-    (t: string) => {
-      setContent(t);
-      setIsEdited(true);
-    },
-  );
+    setContent(note?.content ?? content);
+    editorRef.current?.setText(content);
+    return note;
+  }, [params.filename, params.folder]) || [void 0, void 0, []];
+  let onTextChange = useEvent((t: string) => {
+    setContent(t);
+    setIsEdited(true);
+  });
   const saveNote = useEvent(async function saveNote() {
+    if ((title || content) && note.data && isEdited) {
+      console.log("saveNote");
+      // await Note.saveEditNote(note, { title, content, images });
+      await remoteDb.saveNote({
+        ...note.data,
+        title,
+        content,
+      });
+    }
     setIsEdited(false);
-    if ((title || content) && note && isEdited) {
-      console.log('saveNote')
-      await Note.saveEditNote(note, { title, content, images });
-      syncHelper.sync();
-    }
-  })
+  });
+  useLayoutEffect(() => {
+    updateTitleHeigth(title || "哈");
+  }, [title]);
   useEffect(() => {
-    updateTitleHeigth(note?.title || "哈");
-  }, [note]);
-  useEffect(() => {
-    window.addEventListener('beforeunload', saveNote)
+    window.addEventListener("beforeunload", saveNote);
     return () => {
-      window.removeEventListener('beforeinput', saveNote)
-    }
-  }, [])
+      window.removeEventListener("beforeinput", saveNote);
+    };
+  }, []);
   useEffect(() => {
-    return history.listen(saveNote)
-  }, [])
+    return history.listen(saveNote);
+  }, []);
 
   if (note === null) {
-      history.push("/");
+    history.push("/");
     return null;
   } else if (note === void 0) {
     return null;
@@ -137,7 +148,7 @@ export function NotePage(props: Props) {
       <NavBar
         onBack={saveNote}
         className={css.navbar}
-        left={<Cat active>{cat?.title || "未分类"}</Cat>}
+        left={<Cat active>{note.data?.folder || "默认"}</Cat>}
         right={
           <>
             <Button
@@ -168,7 +179,7 @@ export function NotePage(props: Props) {
             >
               <CheckOutline />
             </Button>
-            <MoreSettings note={note} />
+            {note.data && <MoreSettings note={note.data} />}
           </>
         }
       ></NavBar>
@@ -180,7 +191,6 @@ export function NotePage(props: Props) {
             let t = e.target.value.replace(/\n+/g, "");
             setTitle(t);
             setIsEdited(true);
-            updateTitleHeigth(t);
           }}
           className={css.title}
           placeholder="标题"
@@ -188,22 +198,24 @@ export function NotePage(props: Props) {
           style={{ height: titleHeight || void 0 }}
         />
         <div className={css.info}>
-          {dayjs(note.updatedAt).format("MM-DD hh:mm")}{" "}
+          {note.data?.lastmod.format("MM-DD hh:mm")}{" "}
           {contentForLength.length
             ? `${toText(contentForLength).length}字`
             : ""}
         </div>
-        <QuillEditor
-          getEditor={(e) => {
-            console.timeEnd("quill");
-            editorRef.current = e;
-          }}
-          modules={modules}
-          defaultValue={content}
-          onChange={onTextChange}
-          className={css.content}
-          placeholder={`内容`}
-        />
+        {note.data && (
+          <QuillEditor
+            getEditor={(e) => {
+              console.timeEnd("quill");
+              editorRef.current = e;
+            }}
+            modules={modules}
+            defaultValue={note.data.content}
+            onChange={onTextChange}
+            className={css.content}
+            placeholder={`内容`}
+          />
+        )}
       </div>
     </div>
   );

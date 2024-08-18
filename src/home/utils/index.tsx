@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useId, useState } from "react";
-import { Note } from "../../db/Note";
 import { kv } from "../../kv";
 import { db } from "../../db";
 import { useEvent } from "../../lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
+import type { NoteInfo } from "../../sync/remote-db";
 export { useLiveQuery } from "dexie-react-hooks";
 
-export function toColumnNotes(notes?: Note[]) {
-  if (!notes) return null;
+export function toColumnNotes(notes: NoteInfo[]) {
   return notes.reduce((acc, n, i, arr) => {
     if (i % 2 === 0) {
       acc[i / 2] = n;
@@ -15,7 +14,7 @@ export function toColumnNotes(notes?: Note[]) {
       acc[Math.ceil(arr.length / 2) + (i - 1) / 2] = n;
     }
     return acc;
-  }, [] as Note[]);
+  }, [] as NoteInfo[]);
 }
 
 

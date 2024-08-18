@@ -1,8 +1,6 @@
 import { CheckList, Dialog } from "antd-mobile";
 import { useCallback, useEffect, useRef } from "react";
-import { db, Image } from "../db";
-import { Category } from "../db/Category";
-import { Note } from "../db/Note";
+import type { BufferLike } from "webdav";
 
 export function toText(html: string) {
   return html.replace(/<[^>]+>/g, "");
@@ -26,14 +24,13 @@ function base64ToBlob(urlData: string) {
 
 let blobMap = new Map<string, string>();
 
-export function imageToBlobURL(img?: Image) {
-  let [base64, key] = [img?.url, img?.id];
-  if (!base64) return void 0;
+export function imageToBlobURL(key: string, data: string | BufferLike) {
+  if (!data) return void 0;
   if (key && blobMap.has(key)) {
     return blobMap.get(key);
   }
-  let b = base64ToBlob(base64);
-  let u = URL.createObjectURL(b); // + `?id=${key}`;
+  let b = typeof data === "string" ? base64ToBlob(data) : data;
+  let u = URL.createObjectURL(new Blob([b])); // + `?id=${key}`;
   if (key) {
     blobMap.set(key, u);
   }

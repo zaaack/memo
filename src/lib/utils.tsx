@@ -2,9 +2,8 @@ import { CheckList, Dialog } from "antd-mobile";
 import { useCallback, useEffect, useRef } from "react";
 import { db, Image } from "../db";
 import { Category } from "../db/Category";
-import { Note } from "../db/Note";
-import { syncHelper } from "../sync/sync-helper";
 import { createHashHistory } from "history";
+import { remoteDb, type NoteInfo } from "../sync/remote-db";
 export const history = createHashHistory()
 export function useScrollToLoadMore(cb: () => void, deps?: any[]) {
   let _cb = useEvent(cb)
@@ -41,33 +40,30 @@ export function useEvent<T extends any[], R extends any>(
 export async function moveNote({
   notes,
   onMove,
-  categories,
+  folders,
 }: {
-  notes: Note[];
+  notes: NoteInfo[];
   onMove?: () => void;
-  categories?: Category[];
+  folders?: string[];
 }) {
-  categories = categories || (await db.categories.orderBy("sort").toArray());
+  folders = folders ?? (await remoteDb.getFolders()) ?? [];
   Dialog.alert({
     content: (
       <CheckList
-        defaultValue={notes.length === 1 ? [notes[0].categoryId + ""] : []}
+        defaultValue={notes.length === 1 ? [notes[0].folder] : []}
         onChange={(e) => {
-          if (isNaN(Number(e[0]))) {
-            console.error('invalid move to cat id:'+e)
-            return
-          }
-          Note.move(notes, Number(e[0]))
+          notes.forEach((n) => {
+            remoteDb.moveNote(n, e[0].toString())
+          })
           onMove?.();
           Dialog.clear();
         }}
       >
-        {categories
-          .filter((c) => c.id! >= 0)
+        {folders
           .map((c) => {
             return (
-              <CheckList.Item key={String(c.id)} value={String(c.id)}>
-                {c.title}
+              <CheckList.Item key={c} value={c}>
+                {c}
               </CheckList.Item>
             );
           })}

@@ -26,20 +26,9 @@ import {
 import { CapsuleTab } from "antd-mobile/es/components/capsule-tabs/capsule-tabs";
 import { useLiveQuery } from "dexie-react-hooks";
 import React, { useCallback, useEffect, useId, useState } from "react";
-import { Link,  } from "react-router-dom";
-import { db, Image } from "../db";
-import { Category } from "../db/Category";
-import { Note } from "../db/Note";
+import { Link } from "react-router-dom";
 import css from "./index.module.scss";
-import { Cat, CatGroup } from "../lib/Cat";
-import { NavBar } from "../lib/NavBar";
-import { syncHelper } from "../sync/sync-helper";
-import { imageToBlobURL, toText } from "../utils";
-import {
-  useLongPress,
-  LongPressCallbackMeta,
-  LongPressDetectEvents,
-} from "use-long-press";
+import { useLongPress, LongPressDetectEvents } from "use-long-press";
 import { Header } from "./Header";
 import { toColumnNotes, useCachedLiveQuery } from "./utils";
 import { NoteCard } from "./NoteCard";
@@ -48,115 +37,44 @@ import Dexie from "dexie";
 import { kv } from "../kv";
 import { isEmpty } from "../lib/is";
 import { moveNote, useScrollToLoadMore } from "../lib/utils";
+import { useQuery } from "../utils/hooks";
+import { remoteDb, type Note, type NoteInfo } from "../sync/remote-db";
 
 export interface Props {}
 function Memo(props: Props) {
-  const [curCatId, _setCatId] = useState(kv.curCatId.get(-1));
-  let setCatId = (id: number) => {
-    _setCatId(id);
-    kv.curCatId.set(id);
-    setLimit(30);
+  const [curFolder, _curFolder] = useState(kv.curFolder.get("默认"));
+  let setCurFolder = (f: string) => {
+    _curFolder(f);
+    kv.curFolder.set(f);
+    // setLimit(30);
   };
-  const categories = useCachedLiveQuery(
-    "categories",
-    () => {
-      return db.categories.orderBy("sort").toArray();
-    },
-    { defaults: [] },
-    []
-  );
-  useEffect(() => {
-    if (
-      categories?.some((c) => c.id === Category.all().id) &&
-      curCatId === -1 &&
-      isEmpty(kv.curCatId.get())
-    ) {
-      setCatId(categories[0].id!);
-    }
-  }, [categories]);
-  const [limit, setLimit] = useState(30);
+  const folders = useQuery(() => {
+    return remoteDb.getFolders();
+  }, []);
   const [search, setSearch] = useState("");
-  const data = useCachedLiveQuery(
-    "homeNotes",
-    async () => {
-      console.log("queryNotes", limit);
-      console.time("notes");
-      let notes: Note[] = [];
-      let topNotes: Note[] = [];
-      if (!search) {
-        topNotes = await (
-          await db.notes.where("topAt").above(0).reverse().toArray()
-        ).filter((c) => (curCatId >= 0 ? c.categoryId === curCatId : true));
-      }
-      if (curCatId === -1 || search) {
-        // notes = await Note.find(limit)
-        notes = await db.notes
-          .orderBy("updatedAt")
-          .reverse()
-          .filter((a) => {
-            return (
-              a.trashedAt === 0 &&
-              (search ? toText(a.content).includes(search) : true)
-            );
-          })
-          .limit(limit)
-          .toArray();
-      } else {
-        console.log("curCatId", curCatId);
-        // notes = await Note.find(limit, { catId:curCatId})
-        notes = await db.notes
-          .where("[categoryId+updatedAt]")
-          .between(
-            [curCatId, Dexie.minKey],
-            [curCatId, Dexie.maxKey],
-            true,
-            true
-          )
-          .reverse()
-          .filter((a) => a.trashedAt === 0)
-          .limit(limit)
-          .toArray();
-      }
-      notes = topNotes.concat(
-        notes.filter((n) => !topNotes.some((t) => t.id === n.id))
-      );
-      console.timeEnd("notes");
-      console.log('notes', notes.length)
-      let noteImages = new Map<number, Image>(
-        (
-          await Promise.all(
-            notes.map(async (n) => {
-              let img = n.images[0] && (await db.images.get(n.images[0]));
-              if (img) return [n, img];
-              return null as any;
-            })
-          )
-        ).filter(Boolean)
-      );
-      return { notes, noteImages };
-    },
-    {
-      defaults: { notes: [], noteImages: new Map() },
-      toCache(c) {
-        return {
-          notes: c.notes.slice(0, 30).map((n) => ({
-            ...n,
-            content: toText(n.content).slice(0, 80),
-          })),
-        };
-      },
-      fromCache(c) {
-        return { notes: c.notes, noteImages: new Map() };
-      },
-    },
-    [curCatId, limit, search]
-  );
-  console.log('data', data.notes.length)
+  const notes = useQuery(async () => {
+    console.time("notes");
+    let notes: NoteInfo[] = (await remoteDb.getNotes(curFolder)) || [];
+    let topNotes: NoteInfo[] = notes.filter((n) => n.toped);
+    notes = topNotes.concat(notes.filter((n) => !n.toped));
+    await Promise.all(
+      notes.map(async (n) => {
+        n.cover = await remoteDb.getNoteCover(n);
+        return n;
+      })
+    );
+    console.timeEnd("notes");
+    console.log("notes", notes.length);
+    return notes;
+  }, [curFolder, search]);
+  console.log("data", notes.data);
   useScrollToLoadMore(() => {
     console.log("loadmore");
-    setLimit((l) => l + 30);
+    // setLimit((l) => l + 30);
   });
-  const [checkStates, setCheckStates] = useState<Map<number, Note>>(new Map());
+  const [checkStates, setCheckStates] = useState<Map<number, NoteInfo>>(
+    new Map()
+  );
   const [bulkEditMode, setBulkEditMode] = useState(false);
   let onLongPress = useCallback((e: any, meta: any) => {
     let n = meta.context as Note;
@@ -169,25 +87,26 @@ function Memo(props: Props) {
   return (
     <div className={cx(css.root, search && css.search)}>
       <Header
-        curCatId={curCatId}
+        curFolder={curFolder}
         search={search}
-        onCatChange={setCatId}
+        onFolderChange={setCurFolder}
         onClearSearch={() => setSearch("")}
         onSearch={setSearch}
-        categories={categories}
+        folders={folders.data || []}
       />
 
-      <div className={css.notes} onContextMenu={e=>{
-        e.preventDefault()
-      }}>
-        {toColumnNotes(data?.notes)?.map((n) => {
-          const img = data?.noteImages.get(n.id!);
+      <div
+        className={css.notes}
+        onContextMenu={(e) => {
+          e.preventDefault();
+        }}
+      >
+        {toColumnNotes(notes.data || [])?.map((n) => {
           return (
             <NoteCard
               bindLongPress={bindLongPress}
               bulkEditMode={bulkEditMode}
               note={n}
-              img={img}
               search={search}
               key={n.id}
               checked={checkStates.has(n.id!)}
@@ -203,7 +122,7 @@ function Memo(props: Props) {
           );
         })}
       </div>
-      {location.search.includes("debug") && (
+      {/* {location.search.includes("debug") && (
         <FloatingBubble
           onClick={async (e) => {
             let notes: Note[] = [];
@@ -211,7 +130,7 @@ function Memo(props: Props) {
             for (const iterator of Array(500)) {
               let n = Note.empty();
               n.content = `${i++}_天生我才必有用`.repeat(100);
-              n.categoryId = Math.max(curCatId, 0);
+              n.categoryId = Math.max(curFolder, 0);
               notes.push(n);
             }
             let ids = await db.notes.bulkAdd(notes);
@@ -229,13 +148,8 @@ function Memo(props: Props) {
         >
           <AddOutline fontSize={32} />
         </FloatingBubble>
-      )}
-      <Link
-        to={{
-          pathname: '/note/new',
-          state: { catId: Math.max(curCatId, 0) },
-        }}
-      >
+      )} */}
+      <Link to={`/note/${curFolder}/0_新笔记`}>
         <FloatingBubble
           style={{
             "--initial-position-bottom": "24px",
@@ -259,12 +173,12 @@ function Memo(props: Props) {
           <ActionBarItem
             icon={<CheckOutline />}
             text="全选"
-            checked={checkStates.size === data?.notes.length}
+            checked={checkStates.size === notes.data?.length}
             onClick={() => {
-              if (checkStates.size === data?.notes.length) {
+              if (checkStates.size === notes.data?.length) {
                 setCheckStates(new Map());
               } else {
-                setCheckStates(new Map(data?.notes.map((n) => [n.id!, n])));
+                setCheckStates(new Map(notes.data?.map((n) => [n.id!, n])));
               }
             }}
           />
@@ -272,13 +186,24 @@ function Memo(props: Props) {
             icon={<ToTopOutlined />}
             text={
               checkStates.size &&
-              Array.from(checkStates.values()).every((c) => c.topAt)
+              Array.from(checkStates.values()).every((c) => c.toped)
                 ? "取消置顶"
                 : "置顶"
             }
-            onClick={() => {
-              let notes = Array.from(checkStates.values());
-              Note.toggleTop(notes);
+            onClick={async () => {
+              let checkedNotes = Array.from(checkStates.values());
+              let meta = await remoteDb.getFolderMeta(curFolder);
+              if (meta) {
+                meta.toped = meta.toped.filter(
+                  (id) => !checkedNotes.some((n) => n.id === id)
+                );
+                if (checkedNotes.some((n) => !n.toped)) {
+                  meta.toped.push(...checkedNotes.map((n) => n.id!));
+                }
+                remoteDb.saveFolderMeta(curFolder, meta).then(() => {
+                  notes.invalid();
+                });
+              }
               setBulkEditMode(false);
               setCheckStates(new Map());
             }}
@@ -289,7 +214,7 @@ function Memo(props: Props) {
             onClick={() => {
               moveNote({
                 notes: Array.from(checkStates.values()),
-                categories,
+                folders: folders.data || [],
                 onMove() {
                   setCheckStates(new Map());
                   setBulkEditMode(false);
@@ -302,7 +227,7 @@ function Memo(props: Props) {
             text="删除"
             onClick={() => {
               let notes = Array.from(checkStates.values());
-              Note.trash(notes);
+              notes.map(remoteDb.trashNote);
               setBulkEditMode(false);
               setCheckStates(new Map());
             }}

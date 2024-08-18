@@ -4,15 +4,14 @@ import dayjs from "dayjs";
 import React from "react";
 import { Link } from "react-router-dom";
 import { Image } from "../../db";
-import { Note } from "../../db/Note";
 import { imageToBlobURL, toText } from "../../utils";
 import css from "./index.module.scss";
+import type { NoteInfo } from "../../sync/remote-db";
 
 export interface Props {
-  note: Note;
+  note: NoteInfo;
   bulkEditMode: boolean;
   checked?: boolean;
-  img?: Image;
   search: string;
   bindLongPress: any;
   onCheck:(e: boolean) => void
@@ -21,29 +20,30 @@ export interface Props {
 export function NoteCard(props: Props) {
   let card = (
     <Card>
-      {props.img && <img src={imageToBlobURL(props.img)} className={css.img} />}
+      {props.note.cover && <img src={props.note.cover} className={css.img} />}
       {props.note.title && <h2>{props.note.title}</h2>}
       <div className={css.content}>
         {(() => {
-          let text = toText(props.note.content);
-          if (props.search) {
-            let index = text.indexOf(props.search);
-            let prefix = text.slice(Math.max(index - 10, 0), index);
-            let suffix = text.slice(
-              index + props.search.length,
-              index +
-                props.search.length +
-                (80 - prefix.length - props.search.length)
-            );
-            return [prefix, <b>{props.search}</b>, suffix];
-          }
-          return text.slice(0, 80);
+          // let text = toText(props.note.content);
+          // if (props.search) {
+          //   let index = text.indexOf(props.search);
+          //   let prefix = text.slice(Math.max(index - 10, 0), index);
+          //   let suffix = text.slice(
+          //     index + props.search.length,
+          //     index +
+          //       props.search.length +
+          //       (80 - prefix.length - props.search.length)
+          //   );
+          //   return [prefix, <b>{props.search}</b>, suffix];
+          // }
+          // return text.slice(0, 80);
+          return ''
         })()}
       </div>
       <div className={css.info}>
         <div className={css.time}>
           {(() => {
-            let d = dayjs(props.note.updatedAt);
+            let d = props.note.lastmod;
             let now = dayjs();
             if (d.year() !== now.year()) {
               return d.format("YYYY-MM-DD");
@@ -54,7 +54,7 @@ export function NoteCard(props: Props) {
             }
           })()}
         </div>
-        {!!props.note.topAt && <div className={css.isTop}>
+        {!!props.note.toped && <div className={css.isTop}>
           <ToTopOutlined />
         </div>}
         <div className={css.holder}></div>
@@ -70,7 +70,7 @@ export function NoteCard(props: Props) {
   return (
     <Link
       {...props.bindLongPress(props.note)}
-      to={`/note/${props.note.id}`}
+      to={`/note/${props.note.folder}/${props.note.id}_${props.note.title}`}
       className={css.note}
     >
       {card}

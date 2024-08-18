@@ -11,27 +11,13 @@ import { initDevTools } from "./lib/devtools";
 import { NotePage } from "./note";
 import { Settings } from "./settings";
 import { Webdav } from "./settings/webdav";
-import { syncHelper } from "./sync/sync-helper";
 import { Trash } from "./trash";
 import { initCordova } from "./utils/cordova";
 import { AnimatedSwitch } from "./lib/AnimatedSwitch";
-(window as any)["syncHelper"] = syncHelper;
 (window as any)["kv"] = kv;
 initCordova();
 
 function Main() {
-  useEffect(() => {
-    syncHelper.sync();
-    let sync = () => {
-      if (document.visibilityState === "visible") {
-        syncHelper.sync();
-      }
-    };
-    document.addEventListener("visibilitychange", sync);
-    return () => {
-      document.addEventListener("visibilitychange", sync);
-    };
-  }, []);
   return (
     <React.StrictMode>
       <HashRouter>
@@ -39,7 +25,7 @@ function Main() {
           <Route path="/" exact>
             <Memo />
           </Route>
-          <Route path="/note/:id">
+          <Route path="/note/:folder/:filename">
             <NotePage />
           </Route>
           <Route path="/settings/webdav" exact component={Webdav} />

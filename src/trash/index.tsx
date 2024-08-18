@@ -11,31 +11,26 @@ import dayjs from "dayjs";
 import { useLiveQuery } from "dexie-react-hooks";
 import React, { useState } from "react";
 import { db } from "../db";
-import { Note } from "../db/Note";
 import { ActionBar, ActionBarItem } from "../lib/ActionBar";
 import { NavBar } from "../lib/NavBar";
 import { toText } from "../utils";
 import { useScrollToLoadMore } from "../lib/utils";
 import css from "./index.module.scss";
-import { syncHelper } from "../sync/sync-helper";
+import { useQuery } from "../utils/hooks";
+import { remoteDb, type NoteInfo } from "../sync/remote-db";
 export interface Props {}
 
 export function Trash(props: Props) {
   const [limit, setLimit] = useState(500);
-  const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
-  const notes = useLiveQuery(async () => {
+  const [selectedNotes, setSelectedNotes] = useState<NoteInfo[]>([]);
+  const notes = useQuery(async () => {
     console.time("trashNotes");
-    let notes = await db.notes
-      .where("trashedAt")
-      .above(0)
-      .reverse()
-      .and((x) => !x.removedAt)
-      .limit(limit)
-      .toArray();
-    const now = Date.now();
-    for (const n of notes) {
-      if (now - n.trashedAt > 30 * 24 * 3600 * 1000) {
-        await Note.remove([n])
+    let notes = await remoteDb.getNotes('.trash');
+    if (notes) {
+      for (const n of notes) {
+        if (dayjs().diff(n.lastmod, 'days') > 30) {
+          remoteDb.deleteNote(n);
+        }
       }
     }
     console.timeEnd("trashNotes");
@@ -50,10 +45,10 @@ export function Trash(props: Props) {
             <Button
               fill="none"
               onClick={(e) => {
-                if (notes?.length === selectedNotes.length) {
+                if (notes.data?.length === selectedNotes.length) {
                   setSelectedNotes([]);
                 } else {
-                  setSelectedNotes(notes || []);
+                  setSelectedNotes(notes.data || []);
                 }
               }}
             >
@@ -69,20 +64,20 @@ export function Trash(props: Props) {
         multiple
         value={selectedNotes.map((s) => String(s.id))}
         onChange={(v) => {
-          let notesMap = new Map(notes?.map((n) => [n.id, n]));
+          let notesMap = new Map(notes.data?.map((n) => [n.id, n]));
           setSelectedNotes(
             v.map((i) => notesMap.get(Number(i))!).filter(Boolean)
           );
         }}
       >
-        {notes?.map((n) => {
+        {notes.data?.map((n) => {
           return (
             <CheckList.Item key={n.id} value={String(n.id)}>
               <div className={css.title}>
-                {n.title || toText(n.content).slice(0, 40)}
+                {n.title}
               </div>
               <div className={css.info}>
-                删除于 {dayjs(n.trashedAt).format("YYYY/MM/DD HH:mm:ss")}
+                删除于 {dayjs(n.lastmod).format("YYYY/MM/DD HH:mm:ss")}
               </div>
             </CheckList.Item>
           );
@@ -117,7 +112,9 @@ export function Trash(props: Props) {
                       key: "delete",
                       danger: true,
                       onClick() {
-                        Note.remove(selectedNotes)
+                        selectedNotes.forEach((n) => {
+                          remoteDb.deleteNote(n);
+                        });
                         setSelectedNotes([]);
                       },
                     },
@@ -135,7 +132,9 @@ export function Trash(props: Props) {
                 confirmText: `恢复`,
                 cancelText: `取消`,
                 onConfirm() {
-                  Note.untrash(selectedNotes)
+                  selectedNotes.forEach((n) => {
+                    remoteDb.restoreNote(n);
+                  });
                   setSelectedNotes([]);
                 },
               });

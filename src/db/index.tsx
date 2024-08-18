@@ -52,7 +52,7 @@ export class MemoDB extends Dexie {
   async clean(keepSettings: boolean) {
     await db.delete();
     kv.syncInfo.remove();
-    kv.curCatId.remove();
+    kv.curFolder.remove();
     kv.folderCount.remove();
     if (!keepSettings) {
       kv.settings.remove();

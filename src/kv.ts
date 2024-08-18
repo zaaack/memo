@@ -1,5 +1,4 @@
 import { Image } from "./db";
-import { Note } from "./db/Note";
 import { Field, Kv } from "./lib/kv";
 // note_1-100.json
 // note_101-200.json
@@ -36,8 +35,8 @@ class MemoKv extends Kv {
       pass: "",
     },
   }));
-  folderCount = new Field(this, "folderCount", ()=>({} as { [k: number]: number }));
-  curCatId = new Field<number>(this, "curCatId");
+  folderCount = new Field(this, "folderCount", ()=>({} as { [k: string]: number }));
+  curFolder = new Field<string>(this, "curFolder");
   homeCache = new Field<{
     [k: string]: any
   }, {

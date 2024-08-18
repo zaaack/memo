@@ -10,9 +10,9 @@ export interface Props {
   onSearch: (v: string) => void;
   onClearSearch: () => void;
   search: string;
-  categories?: Category[];
-  curCatId: number;
-  onCatChange: (id: number) => void;
+  folders?: string[];
+  curFolder: string;
+  onFolderChange: (folder: string) => void;
 }
 
 export function Header(props: Props) {
@@ -33,18 +33,18 @@ export function Header(props: Props) {
           </Button>
         </Link>
       </div>
-      {props.categories && !props.search && (
+      {props.folders && !props.search && (
         <CatGroup>
-          {Category.addAllAndDefault(props.categories).map((c) => {
+          {props.folders.map((c) => {
             return (
               <Cat
-                active={props.curCatId === c.id}
-                key={c.id + ""}
+                active={props.curFolder === c}
+                key={c}
                 onClick={() => {
-                  props.onCatChange(c.id!);
+                  props.onFolderChange(c);
                 }}
               >
-                {c.title}
+                {c}
               </Cat>
             );
           })}

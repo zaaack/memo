@@ -29,3 +29,8 @@ task("test:debug", async (ctx) => {
 task("update-snaps", async (ctx) => {
   await ctx.env("UPDATE_SNAPS", "1").exec(`${TestCmd}`);
 });
+
+task('dev', async ctx=> {
+  ctx.exec(`vite`)
+  ctx.env('PORT','3000').exec(`node .`)
+})

@@ -3,7 +3,6 @@ import React, { useState } from 'react'
 import { kv } from '../kv';
 import { NavBar } from '../lib/NavBar';
 import { remoteDb } from '../sync/remote-db';
-import { syncHelper } from '../sync/sync-helper';
 
 export interface Props {
 
@@ -20,7 +19,6 @@ export function Webdav(props: Props) {
         remoteDb.updateConfig()
         if (await remoteDb.test()) {
           setIsEdited(true)
-          syncHelper.sync()
           Toast.show('连接成功')
         } else {
           Toast.show('连接失败!')

@@ -2,13 +2,11 @@ import { Button, Dialog, List, Modal } from "antd-mobile";
 import { MoreOutline } from "antd-mobile-icons";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
-import { db } from "../../db";
-import { Note } from "../../db/Note";
 import {  moveNote } from "../../lib/utils";
-import { syncHelper } from "../../sync/sync-helper";
 import { toText } from "../../utils";
 import css from "./index.module.scss";
 import { useHistory } from "react-router";
+import { remoteDb, type Note, type NoteInfo } from "../../sync/remote-db";
 export interface Props {
   note: Note;
 }
@@ -50,14 +48,11 @@ export function MoreSettings(props: Props) {
           </List.Item>
           <List.Item
             onClick={(e) => {
-              if (props.note.topAt) {
-                db.notes.update(props.note.id!, { topAt: 0 });
-              } else {
-                db.notes.update(props.note.id!, { topAt: Date.now() });
-              }
+              props.note.toped = !props.note.toped
+              remoteDb.saveNote(props.note)
             }}
           >
-            {props.note.topAt ? `取消置顶` : `置顶`}
+            {props.note.toped ? `取消置顶` : `置顶`}
           </List.Item>
           <List.Item
             onClick={(e) => {
@@ -65,14 +60,8 @@ export function MoreSettings(props: Props) {
                 content: (
                   <div>
                     <div>
-                      创建时间：
-                      {dayjs(props.note.createdAt).format(
-                        "YYYY/MM/DD HH:mm:ss"
-                      )}
-                    </div>
-                    <div>
                       修改时间：
-                      {dayjs(props.note.updatedAt).format(
+                      {props.note.lastmod.format(
                         "YYYY/MM/DD HH:mm:ss"
                       )}
                     </div>
@@ -86,9 +75,7 @@ export function MoreSettings(props: Props) {
           </List.Item>
           <List.Item
             onClick={(e) => {
-              if (props.note.id) {
-                db.notes.update(props.note.id, { trashedAt: Date.now() });
-              }
+              remoteDb.trashNote(props.note)
               history.go(-1)
             }}
           >
