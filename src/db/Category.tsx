@@ -1,6 +1,4 @@
-import { Transaction } from "dexie";
-import { db } from ".";
-import { kv } from "../kv";
+import { kv } from "../utils/kv";
 
 export interface Category {
   id?: number;
@@ -9,45 +7,6 @@ export interface Category {
 }
 class CategoryService {
   constructor() {
-    const updateCount = async (catId: number, delta: number) => {
-      let c = kv.folderCount.get({});
-      if (typeof c[catId] !== "undefined") {
-        c[catId] += delta;
-      }
-      if (typeof c[-1] !== "undefined") {
-        c[-1] += delta;
-      }
-      kv.folderCount.set(c);
-      // queue.push(async () => {
-      //   let cat = await db.categories.get(catId);
-      //   if (cat && cat.count >= 0) {
-      //     await db.categories.update(catId, { count: cat.count + delta });
-      //   }
-      // });
-      // t.on('complete', runQueue)
-    };
-    db.notes.hook("creating", (k, n, t) => {
-      updateCount(n.categoryId, 1);
-    });
-    db.notes.hook("updating", (m: any, k, n, t) => {
-      if ("trashedAt" in m) {
-        if (m["trashedAt"] > 0 && n.trashedAt === 0) {
-          updateCount(n.categoryId, -1);
-          updateCount(-2, 1);
-        } else if (m["trashedAt"] === 0 && n.trashedAt > 0) {
-          updateCount(n.categoryId, 1);
-          updateCount(-2, -1);
-        }
-      }
-      if (
-        "categoryId" in m &&
-        m["categoryId"] !== n.categoryId &&
-        n.trashedAt === 0
-      ) {
-        updateCount(n.categoryId, -1);
-        updateCount(m["categoryId"], 1);
-      }
-    });
   }
   empty(): Category {
     return {
@@ -79,11 +38,9 @@ class CategoryService {
     });
     if (!hasAll) {
       cats = [Category.all(), ...cats];
-      db.categories.put(Category.all());
     }
     if (!hasDefault) {
       cats = [...cats, Category.default()];
-      db.categories.put(Category.default());
     }
     return cats;
   }

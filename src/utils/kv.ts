@@ -1,5 +1,4 @@
-import { Image } from "./db";
-import { Field, Kv } from "./lib/kv";
+import { Field, Kv } from "./lib-kv";
 // note_1-100.json
 // note_101-200.json
 // ...

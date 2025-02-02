@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useId, useState } from "react";
-import { kv } from "../../kv";
-import { db } from "../../db";
-import { useEvent } from "../../lib/utils";
-import { useLiveQuery } from "dexie-react-hooks";
+import { kv } from "../../utils/kv";
+import { useEvent } from "../../utils/utils";
 import type { NoteInfo } from "../../sync/remote-db";
-export { useLiveQuery } from "dexie-react-hooks";
 
 export function toColumnNotes(notes: NoteInfo[]) {
   return notes.reduce((acc, n, i, arr) => {
@@ -48,35 +45,35 @@ export function toColumnNotes(notes: NoteInfo[]) {
 //   return data
 // }
 
-export function useCachedLiveQuery<T, C>(
-  key: string,
-  query: () => Promise<T>,
-  {
-    toCache,
-    fromCache,
-    defaults,
-  }: { toCache?: (d: T) => C; fromCache?: (c: C) => T; defaults: T },
-  deps?: any[]
-) {
-  let cache = kv.homeCache.get();
-  defaults = cache[key] ? fromCache?.(cache[key]) ?? cache[key] : defaults
-  let data = useLiveQuery<T, T>(
-    query,
-    deps || [],
-    defaults
-  ) || defaults;
-  const saveCache = useEvent(() => {
-    if (data) {
-      let cache = kv.homeCache.get();
-      cache[key] = toCache?.(data) ?? data;
-      kv.homeCache.set(cache);
-    }
-  })
-  useEffect(() => {
-    window.addEventListener('beforeunload', saveCache)
-    return () => {
-      window.removeEventListener('beforeunload', saveCache)
-    }
-  }, [])
-  return data;
-}
+// export function useCachedLiveQuery<T, C>(
+//   key: string,
+//   query: () => Promise<T>,
+//   {
+//     toCache,
+//     fromCache,
+//     defaults,
+//   }: { toCache?: (d: T) => C; fromCache?: (c: C) => T; defaults: T },
+//   deps?: any[]
+// ) {
+//   let cache = kv.homeCache.get();
+//   defaults = cache[key] ? fromCache?.(cache[key]) ?? cache[key] : defaults
+//   let data = useLiveQuery<T, T>(
+//     query,
+//     deps || [],
+//     defaults
+//   ) || defaults;
+//   const saveCache = useEvent(() => {
+//     if (data) {
+//       let cache = kv.homeCache.get();
+//       cache[key] = toCache?.(data) ?? data;
+//       kv.homeCache.set(cache);
+//     }
+//   })
+//   useEffect(() => {
+//     window.addEventListener('beforeunload', saveCache)
+//     return () => {
+//       window.removeEventListener('beforeunload', saveCache)
+//     }
+//   }, [])
+//   return data;
+// }

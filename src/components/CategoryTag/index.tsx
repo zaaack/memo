@@ -10,7 +10,7 @@ export interface Props {
   onClick?: () => void;
   active?: boolean;
 }
-export function Cat(props: Props) {
+export function CategoryTag(props: Props) {
   return (
     <Tag
       style={{
@@ -35,7 +35,7 @@ export interface Props {
   className?: string;
 }
 
-export function CatGroup(props: Props) {
+export function CategoryTagGroup(props: Props) {
   return (
     <div className={cx(props.className, css.catGroup)}>
       <div className={css.scroller}>
@@ -43,9 +43,9 @@ export function CatGroup(props: Props) {
       </div>
 
       <Link to="/categories">
-        <Cat className={css.editCats}>
+        <CategoryTag className={css.editCats}>
           <FolderOutline />
-        </Cat>
+        </CategoryTag>
       </Link>
     </div>
   );

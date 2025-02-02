@@ -6,7 +6,7 @@ import {
   getPatcher,
   type BufferLike,
 } from "webdav";
-import { kv, Settings, SyncInfo } from "../kv";
+import { kv, Settings, SyncInfo } from "../utils/kv";
 import { imageToBlobURL, sleep } from "../utils";
 import dayjs from "dayjs";
 import asyncReplace from "@egoist/async-replace";
@@ -85,15 +85,18 @@ class RemoteDB {
     if (!Array.isArray(folders)) {
       folders = folders?.data;
     }
-    return folders
-      ?.filter(
-        (f) =>
-          f.type === "directory" &&
-          f.basename !== ".trash" &&
-          f.basename !== this.basePath
-      )
-      .sort((a, b) => -Date.parse(a.lastmod) + Date.parse(b.lastmod))
-      .map((f) => f.basename);
+    if (!folders) {
+      throw new Error('fetch folders failed')
+    }
+      return folders
+        ?.filter(
+          (f) =>
+            f.type === "directory" &&
+            f.basename !== ".trash" &&
+            f.basename !== this.basePath
+        )
+        .sort((a, b) => -Date.parse(a.lastmod) + Date.parse(b.lastmod))
+        .map((f) => f.basename);
   }
   async deleteFolder(folder: string) {
     let meta = await this.getMeta();
@@ -155,29 +158,29 @@ class RemoteDB {
   }
   async getNoteCover(note: NoteInfo) {
     try {
-      let imagesFolder = this.getNoteImagesFolder(note);
-      let images = await this.client?.getDirectoryContents(imagesFolder);
-      if (!Array.isArray(images)) {
-        images = images?.data;
-      }
-      let imgInfo = images?.filter(
-        (f) => f.type === "file" && f.filename.endsWith(".png")
-      )[0];
-      if (imgInfo) {
-        let img = await this.client?.getFileContents(imgInfo.filename, {
-          format: "binary",
-        });
-        return imageToBlobURL(imgInfo.filename, img as BufferLike);
-      }
+      // let imagesFolder = this.getAssetsFolder(note);
+      // let images = await this.client?.getDirectoryContents(imagesFolder);
+      // if (!Array.isArray(images)) {
+      //   images = images?.data;
+      // }
+      // let imgInfo = images?.filter(
+      //   (f) => f.type === "file" && f.filename.endsWith(".png")
+      // )[0];
+      // if (imgInfo) {
+      //   let img = await this.client?.getFileContents(imgInfo.filename, {
+      //     format: "binary",
+      //   });
+      //   return imageToBlobURL(imgInfo.filename, img as BufferLike);
+      // }
     } catch (e) {
       return;
     }
   }
-  getNoteImagesFolder(note: NoteInfo) {
-    return `${this.basePath}/${note.folder}/${note.id}_images`;
+  getAssetsFolder(note: NoteInfo) {
+    return `${this.basePath}/${note.folder}/assets`;
   }
-  getImageUrl(note: NoteInfo, fileName: string) {
-    return `${note.id}_images/${fileName}`;
+  getImagePath(note: NoteInfo, fileName: string) {
+    return `${this.getAssetsFolder(note)}/${fileName}`;
   }
   private async _getOrCreateJson<T = any>(url: string, data?: T) {
     if (await this.client?.exists(url)) {
@@ -194,7 +197,7 @@ class RemoteDB {
     return null;
   }
   async saveImage(note: Note, file: File) {
-    const imagesFolder = this.getNoteImagesFolder(note);
+    const imagesFolder = this.getAssetsFolder(note);
     if (!(await this.client?.exists(imagesFolder))) {
       await this.client?.createDirectory(imagesFolder);
     }
@@ -203,47 +206,47 @@ class RemoteDB {
     if (
       await this.client?.putFileContents(filePath, await file.arrayBuffer())
     ) {
-      return this.getImageUrl(note, fileName);
+      return this.getImagePath(note, fileName);
     }
     return null;
   }
   async restoreNoteImages(note: Note) {
-    note.content = await asyncReplace(
-      note.content,
-      /<custom-image\s+src="(\w+?)"\s*\/>/g,
-      async (_, src) => {
-        let url = `${this.basePath}/${note.folder}/${src}`;
-        let img = await this.client?.getFileContents(url, {
-          format: "binary",
-        });
-        return `<img src="${imageToBlobURL(
-          url,
-          (img as BufferLike).toString("base64url")
-        )}" />`;
-      }
-    );
+    // note.content = await asyncReplace(
+    //   note.content,
+    //   /<custom-image\s+src="(\w+?)"\s*\/>/g,
+    //   async (_, src) => {
+    //     let url = `${this.basePath}/${note.folder}/${src}`;
+    //     let img = await this.client?.getFileContents(url, {
+    //       format: "binary",
+    //     });
+    //     return `<img src="${imageToBlobURL(
+    //       url,
+    //       (img as BufferLike).toString("base64url")
+    //     )}" />`;
+    //   }
+    // );
     return note;
   }
   async saveNoteImages(note: Note) {
-    note.content = await asyncReplace(
-      note.content,
-      /<img\s+src="([^>]+?)"[^>]*?\/?>/g,
-      async (_, url) => {
-        if (url.startsWith("data:")) {
-          try {
-            url = await this.saveImage(
-              note,
-              new File([url], Math.random().toString(36).slice(2) + ".png")
-            );
-          } catch (error) {
-            console.error(error);
-          }
-        }
-        return `<custom-image src="${url}" />`;
-      }
-    );
+    // note.content = await asyncReplace(
+    //   note.content,
+    //   /<img\s+src="([^>]+?)"[^>]*?\/?>/g,
+    //   async (_, url) => {
+    //     if (url.startsWith("data:")) {
+    //       try {
+    //         url = await this.saveImage(
+    //           note,
+    //           new File([url], Math.random().toString(36).slice(2) + ".png")
+    //         );
+    //       } catch (error) {
+    //         console.error(error);
+    //       }
+    //     }
+    //     return `<custom-image src="${url}" />`;
+    //   }
+    // );
   }
-  getNoteUrl(note: NoteInfo) {
+  getNotePath(note: NoteInfo) {
     return `${this.basePath}/${note.folder}/${note.id}_${note.title}.md`;
   }
   async getMeta() {
@@ -302,7 +305,7 @@ class RemoteDB {
     await this.aquireMetaLock(note.folder, meta);
     await this.saveNoteImages(note);
     const result = await this.client?.putFileContents(
-      this.getNoteUrl(note),
+      this.getNotePath(note),
       note.content,
       {
         overwrite: true,
@@ -312,7 +315,7 @@ class RemoteDB {
     return note;
   }
   async deleteNote(note: NoteInfo) {
-    await this.client?.deleteFile(this.getNoteUrl(note));
+    await this.client?.deleteFile(this.getNotePath(note));
     await this.client?.deleteFile(
       `${this.basePath}/${note.folder}/${note.id}_images`
     );
@@ -321,12 +324,12 @@ class RemoteDB {
     if (!note.id) return;
     let trashedNote = { ...note, folder: `.trash/${note.folder}` };
     await this.client?.moveFile(
-      this.getNoteUrl(note),
-      this.getNoteUrl(trashedNote)
+      this.getNotePath(note),
+      this.getNotePath(trashedNote)
     );
     await this.client?.moveFile(
-      this.getNoteImagesFolder(note),
-      this.getNoteImagesFolder(trashedNote)
+      this.getAssetsFolder(note),
+      this.getAssetsFolder(trashedNote)
     );
   }
   async restoreNote(trashedNote: NoteInfo) {
@@ -335,12 +338,12 @@ class RemoteDB {
       folder: trashedNote.folder.replace(".trash/", ""),
     };
     await this.client?.moveFile(
-      this.getNoteUrl(trashedNote),
-      this.getNoteUrl(note)
+      this.getNotePath(trashedNote),
+      this.getNotePath(note)
     );
     await this.client?.moveFile(
-      this.getNoteImagesFolder(trashedNote),
-      this.getNoteImagesFolder(note)
+      this.getAssetsFolder(trashedNote),
+      this.getAssetsFolder(note)
     );
   }
   async moveNote(note: NoteInfo, folder: string) {
@@ -359,13 +362,13 @@ class RemoteDB {
 
     let newNote = { ...note, folder };
     await this.client?.moveFile(
-      this.getNoteUrl(note),
+      this.getNotePath(note),
 
-      this.getNoteUrl(newNote)
+      this.getNotePath(newNote)
     );
     await this.client?.moveFile(
-      this.getNoteImagesFolder(note),
-      this.getNoteImagesFolder(newNote)
+      this.getAssetsFolder(note),
+      this.getAssetsFolder(newNote)
     );
     await this.releaseMetaLock(folder, newMeta);
   }

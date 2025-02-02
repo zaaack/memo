@@ -22,11 +22,11 @@ import Quill from "quill";
 import QuillEditor from "./QuillEditor";
 
 import "./keepAttr";
-import { BackButton } from "../lib/BackButton";
+import { BackButton } from "../components/BackButton";
 // import { NavBar } from "../lib/NavBar";
-import { Cat } from "../lib/Cat";
-import { NavBar } from "../lib/NavBar";
-import { useEvent } from "../lib/utils";
+import { CategoryTag } from "../components/CategoryTag";
+import { NavBar } from "../components/NavBar";
+import { useEvent } from "../utils/utils";
 import { remoteDb } from "../sync/remote-db";
 import { useQuery } from "../utils/hooks";
 
@@ -102,7 +102,7 @@ export function NotePage(props: Props) {
     setContent(note?.content ?? content);
     editorRef.current?.setText(content);
     return note;
-  }, [params.filename, params.folder]) || [void 0, void 0, []];
+  }, []) || [void 0, void 0, []];
   let onTextChange = useEvent((t: string) => {
     setContent(t);
     setIsEdited(true);
@@ -133,7 +133,6 @@ export function NotePage(props: Props) {
   }, []);
 
   if (note === null) {
-    history.push("/");
     return null;
   } else if (note === void 0) {
     return null;
@@ -148,7 +147,7 @@ export function NotePage(props: Props) {
       <NavBar
         onBack={saveNote}
         className={css.navbar}
-        left={<Cat active>{note.data?.folder || "默认"}</Cat>}
+        left={<CategoryTag active>{note.data?.folder || "默认"}</CategoryTag>}
         right={
           <>
             <Button

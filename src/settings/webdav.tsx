@@ -1,7 +1,7 @@
 import { Button, Form, Input, Toast } from 'antd-mobile';
 import React, { useState } from 'react'
-import { kv } from '../kv';
-import { NavBar } from '../lib/NavBar';
+import { kv } from '../utils/kv';
+import { NavBar } from '../components/NavBar';
 import { remoteDb } from '../sync/remote-db';
 
 export interface Props {

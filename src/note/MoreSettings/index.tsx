@@ -2,7 +2,7 @@ import { Button, Dialog, List, Modal } from "antd-mobile";
 import { MoreOutline } from "antd-mobile-icons";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
-import {  moveNote } from "../../lib/utils";
+import {  moveNote } from "../../utils/utils";
 import { toText } from "../../utils";
 import css from "./index.module.scss";
 import { useHistory } from "react-router";

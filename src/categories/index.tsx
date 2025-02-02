@@ -11,13 +11,13 @@ import {
 } from "antd-mobile";
 import { AddOutline, AntOutline, CheckOutline } from "antd-mobile-icons";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { BackButton } from "../lib/BackButton";
+import { BackButton } from "../components/BackButton";
 import css from "./index.module.scss";
 import { cx } from "@emotion/css";
-import { kv } from "../kv";
+import { kv } from "../utils/kv";
 import { Category } from "../db/Category";
-import { NavBar } from "../lib/NavBar";
-import { useEvent } from "../lib/utils";
+import { NavBar } from "../components/NavBar";
+import { useEvent } from "../utils/utils";
 import { Link, useHistory } from "react-router-dom";
 import { remoteDb } from "../sync/remote-db";
 import {

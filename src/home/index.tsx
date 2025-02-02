@@ -23,20 +23,17 @@ import {
   DeleteOutline,
   SetOutline,
 } from "antd-mobile-icons";
-import { CapsuleTab } from "antd-mobile/es/components/capsule-tabs/capsule-tabs";
-import { useLiveQuery } from "dexie-react-hooks";
 import React, { useCallback, useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
 import css from "./index.module.scss";
 import { useLongPress, LongPressDetectEvents } from "use-long-press";
 import { Header } from "./Header";
-import { toColumnNotes, useCachedLiveQuery } from "./utils";
+import { toColumnNotes } from "./utils";
 import { NoteCard } from "./NoteCard";
-import { ActionBar, ActionBarItem } from "../lib/ActionBar";
-import Dexie from "dexie";
-import { kv } from "../kv";
-import { isEmpty } from "../lib/is";
-import { moveNote, useScrollToLoadMore } from "../lib/utils";
+import { ActionBar, ActionBarItem } from "../components/ActionBar";
+import { kv } from "../utils/kv";
+import { isEmpty } from "../utils/is";
+import { moveNote, useScrollToLoadMore } from "../utils/utils";
 import { useQuery } from "../utils/hooks";
 import { remoteDb, type Note, type NoteInfo } from "../sync/remote-db";
 
@@ -59,7 +56,7 @@ function Memo(props: Props) {
     notes = topNotes.concat(notes.filter((n) => !n.toped));
     await Promise.all(
       notes.map(async (n) => {
-        n.cover = await remoteDb.getNoteCover(n);
+        // n.cover = await remoteDb.getNoteCover(n);
         return n;
       })
     );
@@ -229,7 +226,7 @@ function Memo(props: Props) {
               let notes = Array.from(checkStates.values());
               notes.map(remoteDb.trashNote);
               setBulkEditMode(false);
-              setCheckStates(new Map());
+              setCheckStates(new Map())
             }}
           />
         </ActionBar>

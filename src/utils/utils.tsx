@@ -1,6 +1,5 @@
 import { CheckList, Dialog } from "antd-mobile";
 import { useCallback, useEffect, useRef } from "react";
-import { db, Image } from "../db";
 import { Category } from "../db/Category";
 import { createHashHistory } from "history";
 import { remoteDb, type NoteInfo } from "../sync/remote-db";

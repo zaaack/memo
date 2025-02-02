@@ -8,13 +8,12 @@ import {
 } from "antd-mobile";
 import { CloseOutline, DeleteOutline, UndoOutline } from "antd-mobile-icons";
 import dayjs from "dayjs";
-import { useLiveQuery } from "dexie-react-hooks";
 import React, { useState } from "react";
-import { db } from "../db";
-import { ActionBar, ActionBarItem } from "../lib/ActionBar";
-import { NavBar } from "../lib/NavBar";
+// import { db } from "../db";
+import { ActionBar, ActionBarItem } from "../components/ActionBar";
+import { NavBar } from "../components/NavBar";
 import { toText } from "../utils";
-import { useScrollToLoadMore } from "../lib/utils";
+import { useScrollToLoadMore } from "../utils/utils";
 import css from "./index.module.scss";
 import { useQuery } from "../utils/hooks";
 import { remoteDb, type NoteInfo } from "../sync/remote-db";

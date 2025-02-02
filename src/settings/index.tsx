@@ -10,15 +10,12 @@ import {
 import { LeftOutline } from "antd-mobile-icons";
 import React, { useState } from "react";
 import { Link, useHistory } from "react-router-dom";
-import { db } from "../db";
-import { kv } from "../kv";
-import { BackButton } from "../lib/BackButton";
-import { NavBar } from "../lib/NavBar";
+import { kv } from "../utils/kv";
+import { BackButton } from "../components/BackButton";
+import { NavBar } from "../components/NavBar";
 import { remoteDb } from "../sync/remote-db";
-import { syncHelper } from "../sync/sync-helper";
-import { importDB, exportDB } from "dexie-export-import";
 import download from "downloadjs";
-import { openFileDialog } from "../lib/open-file-dialog";
+import { openFileDialog } from "../utils/open-file-dialog";
 
 export interface Props {}
 
@@ -43,8 +40,8 @@ export function Settings(props: Props) {
                 </div>
               ),
             });
-            let blob = await db.export();
-            download(blob, "memo.db.json");
+            // let blob = await db.export();
+            // download(blob, "memo.db.json");
             Dialog.clear();
           }}
         >
@@ -66,7 +63,7 @@ export function Settings(props: Props) {
                         </div>
                       ),
                     });
-                    await db.import(f);
+                    // await db.import(f);
                     Dialog.clear();
                   }
                 });
@@ -89,7 +86,7 @@ export function Settings(props: Props) {
                   text: "删除",
                   danger: true,
                   onClick() {
-                    db.clean(false);
+                    // db.clean(false);
                     history.push("/");
                     location.reload();
                   },
@@ -99,7 +96,7 @@ export function Settings(props: Props) {
                   text: "删除但保留webdav配置",
                   danger: true,
                   onClick() {
-                    db.clean(true);
+                    // db.clean(true);
                     history.push("/");
                     location.reload();
                   },

@@ -3,7 +3,7 @@ import { SetOutline } from "antd-mobile-icons";
 import React from "react";
 import { Link } from "react-router-dom";
 import { Category } from "../../db/Category";
-import { Cat, CatGroup } from "../../lib/Cat";
+import { CategoryTag, CategoryTagGroup } from "../../components/CategoryTag";
 import css from "./index.module.scss";
 
 export interface Props {
@@ -34,10 +34,10 @@ export function Header(props: Props) {
         </Link>
       </div>
       {props.folders && !props.search && (
-        <CatGroup>
+        <CategoryTagGroup>
           {props.folders.map((c) => {
             return (
-              <Cat
+              <CategoryTag
                 active={props.curFolder === c}
                 key={c}
                 onClick={() => {
@@ -45,10 +45,10 @@ export function Header(props: Props) {
                 }}
               >
                 {c}
-              </Cat>
+              </CategoryTag>
             );
           })}
-        </CatGroup>
+        </CategoryTagGroup>
       )}
     </div>
   );
