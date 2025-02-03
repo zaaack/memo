@@ -3,8 +3,6 @@ import { Card, Checkbox } from "antd-mobile";
 import dayjs from "dayjs";
 import React from "react";
 import { Link } from "react-router-dom";
-import { Image } from "../../db";
-import { imageToBlobURL, toText } from "../../utils";
 import css from "./index.module.scss";
 import type { NoteInfo } from "../../sync/remote-db";
 

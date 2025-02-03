@@ -77,7 +77,7 @@ class RemoteDB {
           folder,
           id: f.ctime,
           title: f.name.replace(/\.\w+$/g, ""),
-          lastmod: dayjs(f.mtime),
+          lastmod: dayjs(f.mtime * 1000),
           toped: meta?.toped?.includes(f.ctime),
         };
       });
