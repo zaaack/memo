@@ -8,12 +8,15 @@ import {
   Button,
   CapsuleTabs,
   Card,
+  CenterPopup,
   Checkbox,
   CheckList,
   Dialog,
   FloatingBubble,
+  Loading,
   SafeArea,
   SearchBar,
+  Space,
   TabBar,
 } from "antd-mobile";
 import {
@@ -36,6 +39,7 @@ import { isEmpty } from "../utils/is";
 import { moveNote, useScrollToLoadMore } from "../utils/utils";
 import { useQuery } from "../utils/hooks";
 import { remoteDb, type Note, type NoteInfo } from "../sync/remote-db";
+import LoadingPage from "../components/LoadingPage";
 
 export interface Props {}
 function Memo(props: Props) {
@@ -81,6 +85,12 @@ function Memo(props: Props) {
   let bindLongPress = useLongPress(onLongPress, {
     detect: LongPressDetectEvents.BOTH,
   });
+
+  if (notes.isLoading) {
+    return (
+      <LoadingPage />
+    );
+  }
   return (
     <div className={cx(css.root, search && css.search)}>
       <Header
@@ -119,34 +129,7 @@ function Memo(props: Props) {
           );
         })}
       </div>
-      {/* {location.search.includes("debug") && (
-        <FloatingBubble
-          onClick={async (e) => {
-            let notes: Note[] = [];
-            let i = 0;
-            for (const iterator of Array(500)) {
-              let n = Note.empty();
-              n.content = `${i++}_天生我才必有用`.repeat(100);
-              n.categoryId = Math.max(curFolder, 0);
-              notes.push(n);
-            }
-            let ids = await db.notes.bulkAdd(notes);
-            console.log("addNotes", notes, ids);
-            notes = await db.notes.toArray();
-            notes.forEach((n) => {
-              syncHelper.updateNoteSyncInfo(n);
-            });
-          }}
-          style={{
-            "--initial-position-bottom": "74px",
-            "--initial-position-right": "24px",
-            // '--edge-distance': '24px',
-          }}
-        >
-          <AddOutline fontSize={32} />
-        </FloatingBubble>
-      )} */}
-      <Link to={`/note/${curFolder}/0_新笔记`}>
+      <Link to={`/note/${curFolder}/新笔记`}>
         <FloatingBubble
           style={{
             "--initial-position-bottom": "24px",

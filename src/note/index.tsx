@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useHistory, useLocation, useParams } from "react-router-dom";
+import { useHistory, useLocation, useParams, Prompt } from "react-router-dom";
 
 import "react-quill/dist/quill.snow.css";
 import css from "./index.quill.module.scss";
@@ -29,6 +29,7 @@ import { NavBar } from "../components/NavBar";
 import { useEvent } from "../utils/utils";
 import { remoteDb } from "../sync/remote-db";
 import { useQuery } from "../utils/hooks";
+import LoadingPage from "../components/LoadingPage";
 
 {
   let Image = Quill.import("formats/image");
@@ -100,9 +101,9 @@ export function NotePage(props: Props) {
     console.timeEnd("getNote");
     setTitle(title);
     setContent(note?.content ?? content);
-    editorRef.current?.setText(content);
+    editorRef.current?.setText(content, "silent");
     return note;
-  }, []) || [void 0, void 0, []];
+  }, []) ;
   let onTextChange = useEvent((t: string) => {
     setContent(t);
     setIsEdited(true);
@@ -122,20 +123,9 @@ export function NotePage(props: Props) {
   useLayoutEffect(() => {
     updateTitleHeigth(title || "哈");
   }, [title]);
-  useEffect(() => {
-    window.addEventListener("beforeunload", saveNote);
-    return () => {
-      window.removeEventListener("beforeinput", saveNote);
-    };
-  }, []);
-  useEffect(() => {
-    return history.listen(saveNote);
-  }, []);
 
-  if (note === null) {
-    return null;
-  } else if (note === void 0) {
-    return null;
+  if (note.isLoading) {
+    return <LoadingPage />;
   }
 
   const getEditorHistory = () => {
@@ -216,6 +206,10 @@ export function NotePage(props: Props) {
           />
         )}
       </div>
+      <Prompt
+      when={isEdited}
+      message={`退出前请保存`}
+      />
     </div>
   );
 }

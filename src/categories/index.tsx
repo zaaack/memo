@@ -79,7 +79,7 @@ const CatItem = /*SortableElement<{ cat: Category; count: number }>*/ ({
       closeOnAction={false}
       closeOnTouchOutside={true}
       rightActions={[
-        ...(index > 0
+        ...(index > 1
           ? [
               {
                 key: "up",
@@ -93,6 +93,7 @@ const CatItem = /*SortableElement<{ cat: Category; count: number }>*/ ({
                   remoteDb.saveMeta({
                     folderSort: data,
                   });
+                  cats.invalid();
                 },
               },
             ]
@@ -111,6 +112,7 @@ const CatItem = /*SortableElement<{ cat: Category; count: number }>*/ ({
                   remoteDb.saveMeta({
                     folderSort: data,
                   });
+                  cats.invalid();
                 },
               },
             ]
@@ -152,12 +154,12 @@ const CatItem = /*SortableElement<{ cat: Category; count: number }>*/ ({
   );
 };
 
-export function Categories(props: Props) {
+export function Folders(props: Props) {
   const [folderCount, setFolderCount] = useState(kv.folderCount.get({}));
   const history = useHistory();
 
   const cats = useQuery(async () => {
-    let cats = (await remoteDb.getFolders()) ?? [];
+    let cats = await remoteDb.getFolders()
     console.log("cats", cats);
     return cats;
   }, []);

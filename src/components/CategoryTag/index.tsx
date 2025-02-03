@@ -42,7 +42,7 @@ export function CategoryTagGroup(props: Props) {
         {props.children}
       </div>
 
-      <Link to="/categories">
+      <Link to="/folders">
         <CategoryTag className={css.editCats}>
           <FolderOutline />
         </CategoryTag>

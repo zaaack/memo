@@ -4,7 +4,7 @@ import "dexie-export-import";
 import { BrowserRouter, Link, Router } from "react-router-dom";
 import { Route, Switch, HashRouter } from "react-router-dom";
 
-import { Categories } from "./categories";
+import { Folders as Folders } from "./categories";
 import Memo from "./home";
 import { kv } from "./utils/kv";
 import { initDevTools } from "./utils/devtools";
@@ -22,18 +22,12 @@ function Main() {
     <React.StrictMode>
       <BrowserRouter>
         <AnimatedSwitch>
-          <Route path="/" exact>
-            <Memo />
-          </Route>
-          <Route path="/note/:folder/:filename">
-            <NotePage />
-          </Route>
+          <Route path="/" exact component={Memo}></Route>
+          <Route path="/note/:folder/:filename" component={NotePage}></Route>
           <Route path="/settings/webdav" exact component={Webdav} />
-          <Route path="/settings" exact>
-            <Settings />
-          </Route>
+          <Route path="/settings" exact component={Settings}></Route>
           <Route path="/trash" exact component={Trash} />
-          <Route path="/categories" exact component={Categories} />
+          <Route path="/folders" exact component={Folders} />
           <Route>
             <div>No Match</div>
           </Route>

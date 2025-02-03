@@ -23,12 +23,6 @@ export function useQuery<T>(query: () => Promise<T>, deps: any[]) {
   });
 
   function invalid() {
-    setState({
-      data: null,
-      isLoading: true,
-      error: null,
-      invalid,
-    });
     query()
       .then((d) => {
         setState({
@@ -47,6 +41,14 @@ export function useQuery<T>(query: () => Promise<T>, deps: any[]) {
         });
       });
   }
-  useEffect(invalid, deps);
+  useEffect(() => {
+    setState({
+      data: null,
+      isLoading: true,
+      error: null,
+      invalid,
+    });
+    invalid();
+  }, deps);
   return state;
 }

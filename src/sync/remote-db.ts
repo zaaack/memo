@@ -10,9 +10,10 @@ import { kv, Settings, SyncInfo } from "../utils/kv";
 import { imageToBlobURL, sleep } from "../utils";
 import dayjs from "dayjs";
 import asyncReplace from "@egoist/async-replace";
+import { folderApi } from "./folder-api";
+import { fileApi } from "./file-api";
 
 export interface FolderMeta {
-  id: number;
   locked: number;
   toped: number[];
 }
@@ -32,103 +33,52 @@ export interface Note extends NoteInfo {
 }
 
 class RemoteDB {
-  client?: WebDAVClient;
-  proxyUrl =
-    process.env.NODE_ENV === "development"
-      ? `http://127.0.0.1:3000/api/proxy/`
-      : "plus" in window || "_cordovaNative" in window
-      ? ""
-      : "/api/proxy/";
+  // client?: WebDAVClient;
   constructor() {
-    this.client = this.updateConfig();
-  }
-  private basePath = "WebdavMemo";
-  updateConfig() {
-    const conf = kv.settings.get().webdav;
-    if (!conf) {
-      return;
-    }
-    let client = (this.client = createClient(
-      // `http://127.0.0.1:1900/`,
-      conf.url ? `${this.proxyUrl}${conf.url}` : "https://www.example.com",
-      // `http://127.0.0.1:3010/proxy/https://dav.jianguoyun.com/dav/`,
-      {
-        authType: AuthType.Password,
-        username: conf.user,
-        password: conf.pass,
-        maxBodyLength: Number.MAX_SAFE_INTEGER,
-        maxContentLength: Number.MAX_SAFE_INTEGER,
-      }
-    ));
-    client
-      .exists(this.basePath)
-      .then(async (exists) => {
-        if (!exists) {
-          client.createDirectory(this.basePath);
-          this.addFolder("默认");
-        }
-      })
-      .catch(console.error);
-    return client;
-  }
-  async test() {
-    try {
-      await this.client?.exists(this.basePath);
-      return true;
-    } catch (error) {
-      console.error(error);
-      return false;
-    }
   }
   async getFolders() {
-    let folders = await this.client?.getDirectoryContents(this.basePath);
-    if (!Array.isArray(folders)) {
-      folders = folders?.data;
-    }
+    let meta = await this.getMeta()
+    let folders = await folderApi.list()
     if (!folders) {
       throw new Error('fetch folders failed')
     }
-      return folders
-        ?.filter(
-          (f) =>
-            f.type === "directory" &&
-            f.basename !== ".trash" &&
-            f.basename !== this.basePath
-        )
-        .sort((a, b) => -Date.parse(a.lastmod) + Date.parse(b.lastmod))
-        .map((f) => f.basename);
+      return folders.folders
+        ?.filter((f) => f.name !== ".trash")
+        .sort((a, b) => {
+          if (a.name === '默认') {
+            return -1
+          }
+          return (
+            meta.folderSort.indexOf(a.name) - meta.folderSort.indexOf(b.name)
+          );
+        })
+        .map((f) => f.name);
   }
   async deleteFolder(folder: string) {
     let meta = await this.getMeta();
     meta.folderSort = meta.folderSort.filter((f) => f !== folder);
     await this.saveMeta(meta);
-    await this.client?.deleteFile(`${this.basePath}/${folder}`);
+    await folderApi.delete(folder);
   }
   async addFolder(folder: string) {
     let meta = await this.getMeta();
     meta.folderSort.push(folder);
     await this.saveMeta(meta);
-    await this.client?.createDirectory(`${this.basePath}/${folder}`);
+    await folderApi.put(folder);
   }
   async getNotes(folder: string) {
-    let notes = await this.client?.getDirectoryContents(
-      `${this.basePath}/${folder}`
-    );
+    let notes = await fileApi.list(folder)
     let meta = await this.getFolderMeta(folder);
-    if (!Array.isArray(notes)) {
-      notes = notes?.data;
-    }
-    let n = notes
-      ?.filter((f) => f.type === "file" && f.filename.endsWith(".md"))
-      .sort((a, b) => -Date.parse(a.lastmod) + Date.parse(b.lastmod))
+    let n = notes.files
+      ?.filter((f) => f.name.endsWith(".md"))
+      .sort((a, b) => -a.mtime + b.mtime)
       .map<NoteInfo>((f) => {
-        let [id, titleWithExt] = f.basename.split("_", 2);
         return {
           folder,
-          id: Number(id),
-          title: titleWithExt.replace(/\.\w+$/g, ""),
-          lastmod: dayjs(f.lastmod),
-          toped: meta?.toped?.includes(Number(id)),
+          id: f.ctime,
+          title: f.name.replace(/\.\w+$/g, ""),
+          lastmod: dayjs(f.mtime),
+          toped: meta?.toped?.includes(f.ctime),
         };
       });
     console.log("notes", n);
@@ -141,19 +91,16 @@ class RemoteDB {
         content: "",
       };
     }
-    let note = await this.client?.getFileContents(
-      `${this.basePath}/${noteInfo.folder}/${noteInfo.id}_${noteInfo.title}.md`,
-      {
-        format: "text",
-      }
-    );
+    let note = await fileApi.get({
+      folder: noteInfo.folder,
+      name: `${noteInfo.title}.md`,
+    });
     if (!note) {
       return;
     }
-    note = note.toString();
     return {
       ...noteInfo,
-      content: note,
+      content: String(note),
     };
   }
   async getNoteCover(note: NoteInfo) {
@@ -177,34 +124,21 @@ class RemoteDB {
     }
   }
   getAssetsFolder(note: NoteInfo) {
-    return `${this.basePath}/${note.folder}/assets`;
+    return `${note.folder}/assets/${note.id}`;
   }
   getImagePath(note: NoteInfo, fileName: string) {
     return `${this.getAssetsFolder(note)}/${fileName}`;
   }
-  private async _getOrCreateJson<T = any>(url: string, data?: T) {
-    if (await this.client?.exists(url)) {
-      const result = await this.client?.getFileContents(url, {
-        format: "text",
-      });
-      return result ? (JSON.parse(result.toString()) as T) : void 0;
-    }
-    if (data) {
-      if (await this.client?.putFileContents(url, JSON.stringify(data))) {
-        return data;
-      }
-    }
-    return null;
-  }
   async saveImage(note: Note, file: File) {
     const imagesFolder = this.getAssetsFolder(note);
-    if (!(await this.client?.exists(imagesFolder))) {
-      await this.client?.createDirectory(imagesFolder);
-    }
     const fileName = file.name;
     const filePath = `${imagesFolder}/${fileName}`;
     if (
-      await this.client?.putFileContents(filePath, await file.arrayBuffer())
+      await fileApi.put({
+      folder: imagesFolder,
+      name: fileName,
+      image: file,
+      })
     ) {
       return this.getImagePath(note, fileName);
     }
@@ -247,38 +181,37 @@ class RemoteDB {
     // );
   }
   getNotePath(note: NoteInfo) {
-    return `${this.basePath}/${note.folder}/${note.id}_${note.title}.md`;
+    return `${note.folder}/${note.title}.md`;
   }
-  async getMeta() {
-    const metaFile = `${this.basePath}/meta.json`;
-    let meta = await this._getOrCreateJson<Meta>(metaFile, {
-      folderSort: (await this.getFolders()) || [],
-    });
-    if (!meta) {
-      throw new Error("get meta file error");
+  async getMeta(): Promise<Meta> {
+    try {
+      let meta = await fileApi.getMeta()
+      return meta;
+    } catch(e) {
+      console.error(e)
+      return {
+        folderSort: []
+      }
     }
-    return meta;
   }
   async saveMeta(meta: Meta) {
-    const metaFile = `${this.basePath}/meta.json`;
-    await this.client?.putFileContents(metaFile, JSON.stringify(meta));
+    await fileApi.setMeta(meta)
   }
 
-  async getFolderMeta(folder: string) {
-    const metaFile = `${this.basePath}/${folder}/meta.json`;
-    let meta = await this._getOrCreateJson<FolderMeta>(metaFile, {
-      id: 0,
-      locked: 0,
-      toped: [],
-    });
-    if (!meta) {
-      throw new Error("get meta file error");
+  async getFolderMeta(folder: string): Promise<FolderMeta> {
+    try {
+      let meta = await fileApi.getMeta(folder)
+      return meta;
+    } catch (error) {
+      console.error(error)
+      return {
+        locked:0,
+        toped: [],
+      }
     }
-    return meta;
   }
   async saveFolderMeta(folder: string, meta: FolderMeta) {
-    const metaFile = `${this.basePath}/${folder}/meta.json`;
-    await this.client?.putFileContents(metaFile, JSON.stringify(meta));
+    await fileApi.setMeta(meta, folder)
   }
   async aquireMetaLock(folder: string, meta: FolderMeta) {
     if (Date.now() - meta.locked < 1000 * 60 * 1) {
@@ -293,9 +226,6 @@ class RemoteDB {
   }
   async saveNote(note: Note) {
     let meta = await this.getFolderMeta(note.folder);
-    if (!note.id) {
-      note.id = ++meta.id;
-    }
     if (note.toped) {
       meta.toped.push(note.id);
       meta.toped = Array.from(new Set(meta.toped));
@@ -304,30 +234,26 @@ class RemoteDB {
     }
     await this.aquireMetaLock(note.folder, meta);
     await this.saveNoteImages(note);
-    const result = await this.client?.putFileContents(
-      this.getNotePath(note),
-      note.content,
-      {
-        overwrite: true,
-      }
-    );
+    const result = await fileApi.put({
+      folder: note.folder,
+      name: `${note.title}.md`,
+      content: note.content,
+    });
     await this.releaseMetaLock(note.folder, meta);
     return note;
   }
   async deleteNote(note: NoteInfo) {
-    await this.client?.deleteFile(this.getNotePath(note));
-    await this.client?.deleteFile(
-      `${this.basePath}/${note.folder}/${note.id}_images`
-    );
+    await fileApi.delete(this.getNotePath(note));
+    await folderApi.delete(this.getAssetsFolder(note));
   }
   async trashNote(note: NoteInfo) {
     if (!note.id) return;
     let trashedNote = { ...note, folder: `.trash/${note.folder}` };
-    await this.client?.moveFile(
+    await fileApi.rename(
       this.getNotePath(note),
-      this.getNotePath(trashedNote)
+      this.getNotePath(trashedNote),
     );
-    await this.client?.moveFile(
+    await fileApi.rename(
       this.getAssetsFolder(note),
       this.getAssetsFolder(trashedNote)
     );
@@ -337,11 +263,11 @@ class RemoteDB {
       ...trashedNote,
       folder: trashedNote.folder.replace(".trash/", ""),
     };
-    await this.client?.moveFile(
+    await fileApi.rename(
       this.getNotePath(trashedNote),
       this.getNotePath(note)
     );
-    await this.client?.moveFile(
+    await fileApi.rename(
       this.getAssetsFolder(trashedNote),
       this.getAssetsFolder(note)
     );
@@ -354,19 +280,17 @@ class RemoteDB {
       await this.saveFolderMeta(note.folder, meta);
     }
     let newMeta = await this.getFolderMeta(folder);
-    note.id = ++newMeta.id;
     if (note.toped) {
       newMeta.toped.push(note.id);
     }
     await this.aquireMetaLock(folder, newMeta);
 
     let newNote = { ...note, folder };
-    await this.client?.moveFile(
+    await fileApi.rename(
       this.getNotePath(note),
-
-      this.getNotePath(newNote)
+      this.getNotePath(newNote),
     );
-    await this.client?.moveFile(
+    await fileApi.rename(
       this.getAssetsFolder(note),
       this.getAssetsFolder(newNote)
     );
