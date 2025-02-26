@@ -30,7 +30,8 @@ import { useEvent } from "../utils/utils";
 import { remoteDb } from "../sync/remote-db";
 import { useQuery } from "../utils/hooks";
 import LoadingPage from "../components/LoadingPage";
-
+// https://github.com/Milkdown/milkdown
+// https://github.com/mdx-editor/editor?tab=readme-ov-file
 {
   let Image = Quill.import("formats/image");
   Image.sanitize = (url: string) => url;
@@ -90,12 +91,17 @@ export function NotePage(props: Props) {
   const note = useQuery(async () => {
     console.time("quill");
     console.time("getNote");
-    const [id, title] = params.filename.split("_", 2);
+    let [id, title] = params.filename.split("_", 2);
+    if (!title) {
+      title = id;
+      id = "";
+    }
     let note = await remoteDb.getOrCreateNote({
       folder: params.folder || "默认",
-      id: Number(id || 0),
+      id: id || "",
       title: title || "新笔记",
       lastmod: dayjs(),
+      ctime: dayjs().unix(),
     });
     console.log("note", note);
     console.timeEnd("getNote");
@@ -116,9 +122,10 @@ export function NotePage(props: Props) {
         ...note.data,
         title,
         content,
-      });
+      }, note.data);
     }
     setIsEdited(false);
+    history.goBack();
   });
   useLayoutEffect(() => {
     updateTitleHeigth(title || "哈");
@@ -208,7 +215,7 @@ export function NotePage(props: Props) {
       </div>
       <Prompt
       when={isEdited}
-      message={`退出前请保存`}
+      message={`编辑尚未保存，确定要退出吗？`}
       />
     </div>
   );

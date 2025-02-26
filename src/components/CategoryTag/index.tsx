@@ -14,11 +14,11 @@ export function CategoryTag(props: Props) {
   return (
     <Tag
       style={{
-        "--border-color": props.active ? "#ddd" : "#fff",
-        "--background-color": props.active ? "#ddd" : "#fff",
-        "--text-color": "#222",
-        '--border-radius': '6px',
-        fontSize: '15px',
+        "--border-color": props.active ? "#555" : "#111",
+        "--background-color": props.active ? "#555" : "#111",
+        "--text-color": props.active ? "#fff" : "#aaa",
+        "--border-radius": "6px",
+        fontSize: "15px",
         padding: 5,
       }}
       onClick={props.onClick}

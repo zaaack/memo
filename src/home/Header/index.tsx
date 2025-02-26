@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Category } from "../../db/Category";
 import { CategoryTag, CategoryTagGroup } from "../../components/CategoryTag";
 import css from "./index.module.scss";
+import { shallowEqual } from "../../utils";
 
 export interface Props {
   onSearch: (v: string) => void;
@@ -14,8 +15,11 @@ export interface Props {
   curFolder: string;
   onFolderChange: (folder: string) => void;
 }
+export const Header= React.memo(_Header, (p1, p2) => {
+  return shallowEqual(p1, p2, ["onSearch", "onClearSearch", "onFolderChange"]);
+})
 
-export function Header(props: Props) {
+function _Header(props: Props) {
   return (
     <div className={css.header}>
       <div className={css.navbar}>

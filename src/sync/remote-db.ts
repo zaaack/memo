@@ -15,15 +15,16 @@ import { fileApi } from "./file-api";
 
 export interface FolderMeta {
   locked: number;
-  toped: number[];
+  toped: string[];
 }
 export interface Meta {
   folderSort: string[];
 }
 export interface NoteInfo {
   folder: string;
-  id: number;
+  id: string;
   title: string;
+  ctime: number
   lastmod: dayjs.Dayjs;
   toped?: boolean;
   cover?: string;
@@ -42,6 +43,10 @@ class RemoteDB {
     if (!folders) {
       throw new Error('fetch folders failed')
     }
+    if (!folders.folders.some(f=>f.name === '默认')) {
+      await folderApi.put('默认')
+    }
+    folders = await folderApi.list();
       return folders.folders
         ?.filter((f) => f.name !== ".trash")
         .sort((a, b) => {
@@ -73,12 +78,14 @@ class RemoteDB {
       ?.filter((f) => f.name.endsWith(".md"))
       .sort((a, b) => -a.mtime + b.mtime)
       .map<NoteInfo>((f) => {
+        const [id, title] = f.name.replace(/\.\w+$/g, "").split("_");
         return {
           folder,
-          id: f.ctime,
-          title: f.name.replace(/\.\w+$/g, ""),
+          id,
+          title,
+          ctime: f.ctime,
           lastmod: dayjs(f.mtime * 1000),
-          toped: meta?.toped?.includes(f.ctime),
+          toped: meta?.toped?.includes(id),
         };
       });
     console.log("notes", n);
@@ -88,12 +95,12 @@ class RemoteDB {
     if (!noteInfo.id) {
       return {
         ...noteInfo,
+        id: dayjs().format("YYYYMMDDHHmmss"),
         content: "",
       };
     }
     let note = await fileApi.get({
-      folder: noteInfo.folder,
-      name: `${noteInfo.title}.md`,
+      path: this.getNotePath(noteInfo),
     });
     if (!note) {
       return;
@@ -130,14 +137,11 @@ class RemoteDB {
     return `${this.getAssetsFolder(note)}/${fileName}`;
   }
   async saveImage(note: Note, file: File) {
-    const imagesFolder = this.getAssetsFolder(note);
     const fileName = file.name;
-    const filePath = `${imagesFolder}/${fileName}`;
     if (
       await fileApi.put({
-      folder: imagesFolder,
-      name: fileName,
-      image: file,
+        path: this.getImagePath(note, fileName),
+        image: file,
       })
     ) {
       return this.getImagePath(note, fileName);
@@ -181,7 +185,7 @@ class RemoteDB {
     // );
   }
   getNotePath(note: NoteInfo) {
-    return `${note.folder}/${note.title}.md`;
+    return `${note.folder}/${note.id}_${note.title}.md`;
   }
   async getMeta(): Promise<Meta> {
     try {
@@ -224,7 +228,7 @@ class RemoteDB {
     meta.locked = 0;
     await this.saveFolderMeta(folder, meta);
   }
-  async saveNote(note: Note) {
+  async saveNote(note: Note, oldNote?: Note) {
     let meta = await this.getFolderMeta(note.folder);
     if (note.toped) {
       meta.toped.push(note.id);
@@ -234,9 +238,14 @@ class RemoteDB {
     }
     await this.aquireMetaLock(note.folder, meta);
     await this.saveNoteImages(note);
+    if (oldNote) {
+      await fileApi.rename(
+        this.getNotePath(oldNote),
+        this.getNotePath(note),
+      ).catch(console.error);
+    }
     const result = await fileApi.put({
-      folder: note.folder,
-      name: `${note.title}.md`,
+      path: this.getNotePath(note),
       content: note.content,
     });
     await this.releaseMetaLock(note.folder, meta);

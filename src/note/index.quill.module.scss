@@ -21,12 +21,15 @@
     font-weight: bold;
     letter-spacing: 1px;
     font-family: var(--adm-font-family);
+    background-color: var(--adm-color-background);
+    color: var(--adm-color-text);
   }
   .info {
     padding: 0 15px;
     font-size: 13px;
     margin: -8px 0 0px;
-    color: #aaa;
+    color: var(--adm-color-background);
+    ;
   }
   .content {
     min-height: calc(100vh - 42 * 2px - 48px - 48px);
@@ -54,10 +57,16 @@
     overflow-y: auto;
     white-space: nowrap;
     background-color: var(--adm-color-background);
+    .ql-snow .ql-stroke {
+      stroke: var(--adm-color-text);
+    }
+    .ql-snow .ql-fill {
+      fill: var(--adm-color-text);
+    }
   }
   .ql-container{
     font-size: inherit;
-    background-color: white;
+    background-color: var(--adm-color-background);
     font-size: 15px;
     line-height: normal;
     .ql-editor {
@@ -67,17 +76,20 @@
   .ql-container.ql-snow {
     border: none;
   }
-  .ql-snow .ql-picker.ql-expanded .ql-picker-options {
+  .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-options {
     top: auto;
     bottom: -8px;
     display: flex;
     padding-right: 0;
     padding-left: 0;
     z-index: 5;
+    border-color: var(--adm-color-background);
     .ql-picker-item {
       padding-left: 8px;
       padding-right: 8px;
-      border-right: 1px solid #aaa;
+      border-right: 1px solid var(--adm-color-background);
+      color: var(--adm-color-text);
+      background-color: var(--adm-color-background);
     }
   }
   .ql-snow .ql-picker.ql-header {

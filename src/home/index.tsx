@@ -86,10 +86,8 @@ function Memo(props: Props) {
     detect: LongPressDetectEvents.BOTH,
   });
 
-  if (notes.isLoading) {
-    return (
-      <LoadingPage />
-    );
+  if (folders.isLoading) {
+    return <LoadingPage />;
   }
   return (
     <div className={cx(css.root, search && css.search)}>
@@ -205,9 +203,9 @@ function Memo(props: Props) {
           <ActionBarItem
             icon={<DeleteOutline />}
             text="删除"
-            onClick={() => {
-              let notes = Array.from(checkStates.values());
-              notes.map(remoteDb.trashNote);
+            onClick={async () => {
+              let ns = Array.from(checkStates.values());
+              Promise.all(ns.map((n) => remoteDb.trashNote(n))).finally(() => notes.invalid());
               setBulkEditMode(false);
               setCheckStates(new Map())
             }}

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react(), VitePWA({ registerType: "autoUpdate" })],
   base: "./",
   build: {
-    outDir: "./docs",
+    outDir: "./server/static",
   },
   server: {
     proxy: {

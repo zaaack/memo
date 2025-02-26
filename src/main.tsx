@@ -38,6 +38,8 @@ function Main() {
 }
 initDevTools().then(() => {
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <Main />
+      <Main />
   );
 });
+
+document.documentElement.setAttribute("data-prefers-color-scheme", "dark");

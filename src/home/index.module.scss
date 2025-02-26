@@ -1,7 +1,7 @@
 @import '../components/common.scss';
 :root {
   --adm-font-family: 'sans-serif';
-  --main-background: #ececec;
+  --main-background: var(--adm-color-background);
   --global-padding: 8px;
   --adm-color-primary: #f90;
 }

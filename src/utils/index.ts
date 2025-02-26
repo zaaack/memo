@@ -43,3 +43,18 @@ export function sleep(ms: number) {
     setTimeout(res, ms);
   });
 }
+
+
+export function shallowEqual(a: any, b: any, ignoreKeys:string[] = []) {
+  if (a === b) return true;
+  if (typeof a!== typeof b) return false;
+  if (typeof a!== "object" || a === null || b === null) return false;
+  if (Object.keys(a).length!== Object.keys(b).length) return false;
+  for (const key in a) {
+    if (ignoreKeys.includes(key)) {
+      continue
+    }
+    if (a[key] !== b[key]) return false;
+  }
+  return true;
+}
